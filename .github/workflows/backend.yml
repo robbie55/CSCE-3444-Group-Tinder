@@ -1,0 +1,37 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'  # Only run if backend files change
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip' # Caches dependencies to speed up future runs
+
+    - name: Install Dependencies
+      # Installs ruff (ensure ruff is in your requirements.txt)
+      run: pip install -r requirements.txt
+
+    - name: Ruff Lint Check
+      # Checks for code errors (unused imports, variables, etc.)
+      run: ruff check .
+
+    - name: Ruff Format Check
+      # Checks if code is formatted correctly (indentation, quotes).
+      # The --check flag causes it to fail if the code isn't perfect, rather than fixing it.
+      run: ruff format --check .
