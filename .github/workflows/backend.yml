@@ -11,7 +11,7 @@ on:
       - 'backend/**'  # Only run if backend files change
 
 jobs:
-  Backend Linter:
+  be_linter:
     runs-on: ubuntu-latest
     defaults:
       run:
