@@ -7,7 +7,7 @@ on:
       - 'backend/**'  # Only run if backend files change
 
 jobs:
-  lint-and-format:
+  fe-lint:
     runs-on: ubuntu-latest
     defaults:
       run:
