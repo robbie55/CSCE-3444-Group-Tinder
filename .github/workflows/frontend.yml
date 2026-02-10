@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
     paths:
       - 'frontend/**'  # Only run if frontend files change
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'frontend/**'  # Only run if frontend files change
 
 jobs:
   Frontend linter:

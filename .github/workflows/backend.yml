@@ -5,6 +5,10 @@ on:
     branches: [ "main" ]
     paths:
       - 'backend/**'  # Only run if backend files change
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'backend/**'  # Only run if backend files change
 
 jobs:
   Backend Linter:
