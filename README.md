@@ -95,14 +95,14 @@ It is best practice to keep our project dependencies separate from your global P
 cd backend
 
 # Windows
-python -m venv venv
-.\venv\Scripts\activate
+python -m venv .venv
+.\.venv\Scripts\activate
 
 # Mac/Linux
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
-*(You will know it worked if you see `(venv)` in your terminal prompt).*
+*(You will know it worked if you see `(.venv)` in your terminal prompt).*
 
 ### 2. Install Dependencies
 ```bash
