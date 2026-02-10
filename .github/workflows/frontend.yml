@@ -1,4 +1,4 @@
-name: Frontend CI
+name: FE Formatting
 
 on:
   pull_request:
