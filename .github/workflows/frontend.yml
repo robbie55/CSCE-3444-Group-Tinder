@@ -7,7 +7,7 @@ on:
       - 'frontend/**'  # Only run if frontend files change
 
 jobs:
-  be-lint:
+  Frontend linter:
     runs-on: ubuntu-latest
     defaults:
       run:
