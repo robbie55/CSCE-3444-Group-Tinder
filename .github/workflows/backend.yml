@@ -1,4 +1,4 @@
-name: Backend CI
+name: BE Formatting 
 
 on:
   pull_request:
