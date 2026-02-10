@@ -3,12 +3,12 @@ name: Frontend CI
 on:
   pull_request:
     branches: [ "main" ]
-    paths:
-      - 'frontend/**'  # Only run if frontend files change
+    # paths:
+      # - 'frontend/**'  # Only run if frontend files change
   push:
     branches: [ "main" ]
-    paths:
-      - 'frontend/**'  # Only run if frontend files change
+    # paths:
+      # - 'frontend/**'  # Only run if frontend files change
 
 jobs:
   fe-linter:

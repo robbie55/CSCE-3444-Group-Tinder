@@ -3,12 +3,12 @@ name: Backend CI
 on:
   pull_request:
     branches: [ "main" ]
-    paths:
-      - 'backend/**'  # Only run if backend files change
+    # paths:
+      # - 'backend/**'  # Only run if backend files change
   push:
     branches: [ "main" ]
-    paths:
-      - 'backend/**'  # Only run if backend files change
+    # paths:
+      # - 'backend/**'  # Only run if backend files change
 
 jobs:
   be_linter:
