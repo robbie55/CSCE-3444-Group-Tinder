@@ -1,4 +1,4 @@
-name: BE Formatting 
+name: Backend CI
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ on:
       # - 'backend/**'  # Only run if backend files change
 
 jobs:
-  be_linter:
+  be-linter:
     runs-on: ubuntu-latest
     defaults:
       run:
