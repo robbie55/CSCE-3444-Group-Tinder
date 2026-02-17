@@ -20,7 +20,7 @@ class UserBase(BaseModel):
     major: Major
     bio: Optional[str] = None
     skills: List[str] = []  # ["Python", "C++"]
-    external_links: Dict[str, str] = {}  # {"github" : "https://... }
+    external_links: Dict[str, HttpUrl] = {}  # {"github" : "https://... }
 
 
 # Create: What the frontend will send to register a user
@@ -37,7 +37,7 @@ class UserRead(UserBase):
 
     class Config:
         populate_by_name = True  # allows us to us .id rather than ._id
-        rary_types_allowed = True  # needed for ObjectId Handling
+        arbitrary_types_allowed = True  # needed for ObjectId Handling
 
 
 # =======================
