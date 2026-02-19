@@ -1,12 +1,16 @@
 from fastapi import FastAPI
 
-from app.routers import users
+from app.routers import auth, users
 
 app = FastAPI()
 
 # Final  router path will be "/api/users"
 # grouping users endpoints in one
+
+
+# ROUTES
 app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(auth.router, prefix="/auth", tags=["login"])
 
 
 @app.get("/")
