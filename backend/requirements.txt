@@ -3,6 +3,7 @@ annotated-types==0.7.0
 anyio==4.12.1
 black==26.1.0
 click==8.3.1
+dnspython==2.8.0
 fastapi==0.128.7
 h11==0.16.0
 idna==3.11
@@ -15,7 +16,9 @@ pluggy==1.6.0
 pydantic==2.12.5
 pydantic_core==2.41.5
 Pygments==2.19.2
+pymongo==4.16.0
 pytest==9.0.2
+python-dotenv==1.2.1
 pytokens==0.4.1
 ruff==0.15.0
 starlette==0.52.1
