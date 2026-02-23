@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 
+from app.db.connect import connectToDb
 from app.routers import users
 
 app = FastAPI()
+
+connectToDb()
 
 # Final  router path will be "/api/users"
 # grouping users endpoints in one
