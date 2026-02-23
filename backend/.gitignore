@@ -1,5 +1,4 @@
 .env
 .venv
 pyrightconfig.json
-app/__pycache__/*
-app/routers/__pycache__/*
+**/__pycache__/
