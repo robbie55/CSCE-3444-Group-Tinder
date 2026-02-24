@@ -26,9 +26,16 @@ async def lifespan(_app: FastAPI):
     db_pass = os.getenv("DB_PASS")
     uri = f"mongodb+srv://{db_user}:{db_pass}@group-matchmaker-csce34.hw6u9in.mongodb.net/?appName=group-matchmaker-csce3444"
 
-    db_state.client = MongoClient(uri)
+    db_client = MongoClient(uri)
+
+    try:
+        db_client.admin.command("ping")
+        print("Database connected successfully.")
+    except Exception as e:
+        print("An exception occured in connecting to the DB: \n", e)
+
+    db_state.client = db_client
     db_state.db = db_state.client["matchmaker_db"]
-    print("Database connected successfully.")
 
     yield  # App runs
 
