@@ -1,24 +1,46 @@
 import os
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
+from fastapi import FastAPI
+from pymongo.database import Database as MongoDatabase
 from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 
 load_dotenv()
 
-db_user = os.getenv("DB_USER")
-db_pass = os.getenv("DB_PASS")
+
+# Use a simple class or dictionary to hold the global state
+# so it can be easily imported and modified
+class DatabaseState:
+    client: MongoClient | None = None
+    db: MongoDatabase | None = None
 
 
-def connectToDb():
+db_state = DatabaseState()
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Startup
+    db_user = os.getenv("DB_USER")
+    db_pass = os.getenv("DB_PASS")
     uri = f"mongodb+srv://{db_user}:{db_pass}@group-matchmaker-csce34.hw6u9in.mongodb.net/?appName=group-matchmaker-csce3444"
 
-    # create client
-    client = MongoClient(uri, server_api=ServerApi("1"))
+    db_state.client = MongoClient(uri)
+    db_state.db = db_state.client["matchmaker_db"]
+    print("Database connected successfully.")
 
-    # send a ping to confirm successful connection
-    try:
-        client.admin.command("ping")
-        print("Pinged your deployment, successful connect")
-    except Exception as e:
-        print(e)
+    yield  # App runs
+
+    if db_state.client:
+        # Shutdown
+        db_state.client.close()
+        print("Database connection closed.")
+
+
+def get_db():
+    """Dependency to inject the database into routes."""
+    if db_state.db is None:
+        raise RuntimeError("DB is not initialized")
+
+    return db_state.db

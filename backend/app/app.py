@@ -1,11 +1,10 @@
 from fastapi import FastAPI
 
-from app.db.connect import connectToDb
+from app.db.connect import lifespan
 from app.routers import users
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
-connectToDb()
 
 # Final  router path will be "/api/users"
 # grouping users endpoints in one
