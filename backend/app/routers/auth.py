@@ -44,19 +44,26 @@ def sign_up(user: UserCreate, db=Depends(get_db)):
 
 
 @router.post("/login")
-def login(credentials: OAuth2PasswordRequestForm = Depends()):
+def login(credentials: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
     """
     Test endpoint for User Login.
     Expects Form Data (x-www-form-urlencoded), NOT JSON!
     """
     # TODO: Add MongoDB reading/hashing validation here later
+    # credentials: { username, password }
+    user_db = db["users"].find_one({"email": credentials.username})
+
+    if not user_db or user_db.get("password") != credentials.password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     # For testing, we echo back what Postman sent to prove the connection works.
     # We also return a mock JWT token format.
     return {
         "message": "Login successful!",
-        "received_username_or_email": credentials.username,
-        "received_password": credentials.password,  # DANGER: Only echoing for testing
         "access_token": "mock_jwt_token_12345",
         "token_type": "bearer",
     }
