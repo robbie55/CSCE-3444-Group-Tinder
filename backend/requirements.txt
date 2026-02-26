@@ -21,6 +21,7 @@ Pygments==2.19.2
 pymongo==4.16.0
 pytest==9.0.2
 python-dotenv==1.2.1
+python-jose[cryptography]==3.4.0
 python-multipart==0.0.22
 pytokens==0.4.1
 ruff==0.15.0

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pymongo.errors import DuplicateKeyError, PyMongoError
+from pymongo.errors import DuplicateKeyError
 
 from app.db.connect import get_db
 from app.models.schemas import UserCreate, UserRead
