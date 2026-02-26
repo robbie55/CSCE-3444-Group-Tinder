@@ -1,8 +1,10 @@
-from datetime import datetime, timezone
+import os
+from datetime import datetime, timedelta, timezone
 
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from pymongo.errors import DuplicateKeyError
 
 from app.db.connect import get_db
@@ -10,75 +12,90 @@ from app.models.schemas import UserCreate, UserRead
 
 router = APIRouter()
 
+JWT_SECRET = os.getenv("JWT_SECRET", "dev-fallback-secret")
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-def hash(raw_pass: str):
-    """
-    Helper to hash a raw password
-    """
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+
+def create_access_token(data: dict) -> str:
+    to_encode = data.copy()
+    to_encode["exp"] = datetime.now(timezone.utc) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        email: str | None = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = db["users"].find_one({"email": email})
+    if user is None:
+        raise credentials_exception
+    user["_id"] = str(user["_id"])
+    return user
+
+
+def hash_password(raw_pass: str) -> str:
     pwd_bytes = raw_pass.encode("utf-8")
     salt = bcrypt.gensalt()
-
     hashed_pwd = bcrypt.hashpw(pwd_bytes, salt)
     return hashed_pwd.decode("utf-8")
 
 
-def validateHash(raw_pass: str, hashed_pass: str):
-    """
-    Helper to validate a raw password with a stored hash pass
-    """
+def verify_password(raw_pass: str, hashed_pass: str) -> bool:
     return bcrypt.checkpw(raw_pass.encode("utf-8"), hashed_pass.encode("utf-8"))
 
 
-@router.post("/sign-up", response_model=UserRead)
+@router.post("/sign-up")
 def sign_up(user: UserCreate, db=Depends(get_db)):
-    """
-    Test endpoint for User Registration.
-    Expects a JSON body matching the UserCreate schema.
-    """
-
     new_user = user.model_dump()
-    new_user["password"] = hash(new_user["password"])
+    new_user["password"] = hash_password(new_user["password"])
     new_user["created_at"] = datetime.now(timezone.utc)
 
     try:
-        # Attempt to insert the new user into the database
         result = db["users"].insert_one(new_user)
         new_user["_id"] = str(result.inserted_id)
-
     except DuplicateKeyError:
-        # Catches if the email/username already exists in MongoDB
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A user with this email or username already exists.",
         )
 
-    return new_user
+    access_token = create_access_token({"sub": new_user["email"]})
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": UserRead(**new_user).model_dump(),
+    }
 
 
 @router.post("/login")
 def login(credentials: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
-    """
-    Test endpoint for User Login.
-    Expects Form Data (x-www-form-urlencoded), NOT JSON!
-    """
-    # TODO: Add MongoDB reading/hashing validation here later
     username, password = credentials.username, credentials.password
-    user_db = None
-    try:
-        user_db = db["users"].find_one({"email": username})
-    except Exception as e:
-        print("An error occured logging in: \n", e)
+    user_db = db["users"].find_one({"email": username})
 
-    if not user_db or not validateHash(password, user_db["password"]):
+    if not user_db or not verify_password(password, user_db["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # return a mock jwt token for now
+    access_token = create_access_token({"sub": user_db["email"]})
     return {
-        "message": "Login successful!",
-        "access_token": "mock_jwt_token_12345",
+        "access_token": access_token,
         "token_type": "bearer",
     }
