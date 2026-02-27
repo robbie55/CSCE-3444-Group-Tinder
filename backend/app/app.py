@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -5,17 +7,21 @@ from fastapi.responses import JSONResponse
 from app.db.connect import lifespan
 from app.routers import auth, users
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(lifespan=lifespan)
 
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # 1. Print the detailed error to your backend terminal (Dev Logging)
-    print(f"\n--- 422 VALIDATION ERROR on {request.method} {request.url} ---")
-    print(f"Invalid Body Sent: {exc.body}")
-    print(f"Specific Errors: {exc.errors()}\n")
+    logger.warning(
+        "422 VALIDATION ERROR on %s %s | Body: %s | Errors: %s",
+        request.method,
+        request.url,
+        exc.body,
+        exc.errors(),
+    )
 
-    # 2. Return the standard detailed 422 response to the client
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content={"detail": exc.errors()},

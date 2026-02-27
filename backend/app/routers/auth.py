@@ -20,7 +20,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
 def _get_jwt_secret() -> str:
-    return os.getenv("JWT_SECRET", "dev-fallback-secret")
+    secret = os.getenv("JWT_SECRET")
+    if not secret:
+        raise RuntimeError("JWT_SECRET environment variable is not set")
+    return secret
 
 
 class TokenResponse(BaseModel):
@@ -72,7 +75,15 @@ def verify_password(raw_pass: str, hashed_pass: str) -> bool:
     return bcrypt.checkpw(raw_pass.encode("utf-8"), hashed_pass.encode("utf-8"))
 
 
-@router.post("/sign-up", response_model=SignUpResponse)
+# Pre-computed hash used in login to prevent timing side-channel attacks.
+# When a login attempt targets a non-existent user, we still run bcrypt against
+# this dummy hash so the response time is indistinguishable from a real lookup.
+_DUMMY_HASH = hash_password("dummy")
+
+
+@router.post(
+    "/sign-up", response_model=SignUpResponse, status_code=status.HTTP_201_CREATED
+)
 def sign_up(user: UserCreate, db=Depends(get_db)):
     new_user = user.model_dump()
     new_user["password"] = hash_password(new_user["password"])
@@ -100,7 +111,15 @@ def login(credentials: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)
     username, password = credentials.username, credentials.password
     user_db = db["users"].find_one({"email": username})
 
-    if not user_db or not verify_password(password, user_db["password"]):
+    if not user_db:
+        verify_password(password, _DUMMY_HASH)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not verify_password(password, user_db["password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",

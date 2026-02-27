@@ -1,3 +1,4 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 
@@ -7,6 +8,8 @@ from pymongo.database import Database as MongoDatabase
 from pymongo.mongo_client import MongoClient
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 
 # Use a simple class or dictionary to hold the global state
@@ -30,9 +33,10 @@ async def lifespan(_app: FastAPI):
 
     try:
         db_client.admin.command("ping")
-        print("Database connected successfully.")
+        logger.info("Database connected successfully.")
     except Exception as e:
-        print("An exception occured in connecting to the DB: \n", e)
+        logger.error("Failed to connect to the database: %s", e)
+        raise
 
     db_state.client = db_client
     db_state.db = db_state.client["matchmaker_db"]
@@ -42,7 +46,7 @@ async def lifespan(_app: FastAPI):
     if db_state.client:
         # Shutdown
         db_state.client.close()
-        print("Database connection closed.")
+        logger.info("Database connection closed.")
 
 
 def get_db():

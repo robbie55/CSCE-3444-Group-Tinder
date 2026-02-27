@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from bson import ObjectId
@@ -19,7 +19,14 @@ from app.routers.auth import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
+TEST_JWT_SECRET = "test-secret"
 FAKE_OBJ_ID = str(ObjectId())
+
+
+@pytest.fixture(autouse=True)
+def _set_jwt_secret(monkeypatch):
+    """Ensure JWT_SECRET is available for every test in this module."""
+    monkeypatch.setenv("JWT_SECRET", TEST_JWT_SECRET)
 
 
 @pytest.fixture()
@@ -99,12 +106,11 @@ class TestCreateAccessToken:
         token = create_access_token({"sub": "test@my.unt.edu"})
         assert len(token.split(".")) == 3
 
-    @patch("app.routers.auth._get_jwt_secret", return_value="test-secret")
-    def test_token_decodes_with_correct_sub(self, _mock_secret):
+    def test_token_decodes_with_correct_sub(self):
         from jose import jwt
 
         token = create_access_token({"sub": "test@my.unt.edu"})
-        payload = jwt.decode(token, "test-secret", algorithms=["HS256"])
+        payload = jwt.decode(token, TEST_JWT_SECRET, algorithms=["HS256"])
         assert payload["sub"] == "test@my.unt.edu"
         assert "exp" in payload
 
@@ -122,7 +128,7 @@ class TestSignUp:
 
         resp = client.post("/api/auth/sign-up", json=VALID_SIGNUP_PAYLOAD)
 
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         body = resp.json()
         assert body["token_type"] == "bearer"
         assert "access_token" in body
@@ -233,7 +239,7 @@ class TestGetCurrentUser:
             "sub": "test@my.unt.edu",
             "exp": datetime(2020, 1, 1, tzinfo=timezone.utc),
         }
-        token = jwt.encode(expired_payload, "dev-fallback-secret", algorithm="HS256")
+        token = jwt.encode(expired_payload, TEST_JWT_SECRET, algorithm="HS256")
 
         with pytest.raises(HTTPException) as exc_info:
             get_current_user(token=token, db=mock_db)
@@ -244,7 +250,7 @@ class TestGetCurrentUser:
         from jose import jwt
 
         payload = {"data": "no-sub", "exp": 9999999999}
-        token = jwt.encode(payload, "dev-fallback-secret", algorithm="HS256")
+        token = jwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 
         with pytest.raises(HTTPException) as exc_info:
             get_current_user(token=token, db=mock_db)
