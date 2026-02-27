@@ -100,7 +100,7 @@ class TestCreateAccessToken:
         assert len(token.split(".")) == 3
 
     @patch("app.routers.auth._get_jwt_secret", return_value="test-secret")
-    def test_token_decodes_with_correct_sub(self, _mock):
+    def test_token_decodes_with_correct_sub(self, _mock_secret):
         from jose import jwt
 
         token = create_access_token({"sub": "test@my.unt.edu"})
@@ -160,8 +160,8 @@ class TestSignUp:
 
 
 class TestLogin:
-    def test_login_success(self, client, mock_db):
-        mock_db["users"].find_one.return_value = valid_user_doc().copy()
+    def test_login_success(self, client, mock_db, valid_user_doc):
+        mock_db["users"].find_one.return_value = valid_user_doc.copy()
 
         resp = client.post(
             "/api/auth/login",
@@ -173,8 +173,8 @@ class TestLogin:
         assert body["token_type"] == "bearer"
         assert "access_token" in body
 
-    def test_login_wrong_password(self, client, mock_db):
-        mock_db["users"].find_one.return_value = valid_user_doc().copy()
+    def test_login_wrong_password(self, client, mock_db, valid_user_doc):
+        mock_db["users"].find_one.return_value = valid_user_doc.copy()
 
         resp = client.post(
             "/api/auth/login",
@@ -208,8 +208,8 @@ class TestGetCurrentUser:
     def _make_token(self, sub="test@my.unt.edu"):
         return create_access_token({"sub": sub})
 
-    def test_valid_token_returns_user(self, mock_db):
-        user_doc = valid_user_doc().copy()
+    def test_valid_token_returns_user(self, mock_db, valid_user_doc):
+        user_doc = valid_user_doc.copy()
         mock_db["users"].find_one.return_value = user_doc
 
         token = self._make_token()
