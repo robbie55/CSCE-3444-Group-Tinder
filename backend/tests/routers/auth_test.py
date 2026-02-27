@@ -21,18 +21,22 @@ from app.routers.auth import (
 
 FAKE_OBJ_ID = str(ObjectId())
 
-VALID_USER_DOC = {
-    "_id": ObjectId(FAKE_OBJ_ID),
-    "username": "testuser",
-    "full_name": "Test User",
-    "major": "Computer Science",
-    "bio": None,
-    "skills": [],
-    "external_links": {},
-    "email": "test@my.unt.edu",
-    "password": hash_password("Secret123!"),
-    "created_at": datetime.now(timezone.utc),
-}
+
+@pytest.fixture()
+def valid_user_doc():
+    return {
+        "_id": ObjectId(FAKE_OBJ_ID),
+        "username": "testuser",
+        "full_name": "Test User",
+        "major": "Computer Science",
+        "bio": None,
+        "skills": [],
+        "external_links": {},
+        "email": "test@my.unt.edu",
+        "password": hash_password("Secret123!"),
+        "created_at": datetime.now(timezone.utc),
+    }
+
 
 VALID_SIGNUP_PAYLOAD = {
     "username": "testuser",
@@ -95,8 +99,8 @@ class TestCreateAccessToken:
         token = create_access_token({"sub": "test@my.unt.edu"})
         assert len(token.split(".")) == 3
 
-    @patch("app.routers.auth.JWT_SECRET", "test-secret")
-    def test_token_decodes_with_correct_sub(self):
+    @patch("app.routers.auth._get_jwt_secret", return_value="test-secret")
+    def test_token_decodes_with_correct_sub(self, _mock):
         from jose import jwt
 
         token = create_access_token({"sub": "test@my.unt.edu"})
@@ -116,7 +120,7 @@ class TestSignUp:
             inserted_id=ObjectId(FAKE_OBJ_ID)
         )
 
-        resp = client.post("/auth/sign-up", json=VALID_SIGNUP_PAYLOAD)
+        resp = client.post("/api/auth/sign-up", json=VALID_SIGNUP_PAYLOAD)
 
         assert resp.status_code == 200
         body = resp.json()
@@ -129,13 +133,13 @@ class TestSignUp:
     def test_sign_up_duplicate_email(self, client, mock_db):
         mock_db["users"].insert_one.side_effect = DuplicateKeyError("dup")
 
-        resp = client.post("/auth/sign-up", json=VALID_SIGNUP_PAYLOAD)
+        resp = client.post("/api/auth/sign-up", json=VALID_SIGNUP_PAYLOAD)
 
         assert resp.status_code == 400
         assert "already exists" in resp.json()["detail"]
 
     def test_sign_up_missing_fields(self, client):
-        resp = client.post("/auth/sign-up", json={"username": "incomplete"})
+        resp = client.post("/api/auth/sign-up", json={"username": "incomplete"})
         assert resp.status_code == 422
 
     def test_sign_up_hashes_password(self, client, mock_db):
@@ -143,7 +147,7 @@ class TestSignUp:
             inserted_id=ObjectId(FAKE_OBJ_ID)
         )
 
-        client.post("/auth/sign-up", json=VALID_SIGNUP_PAYLOAD)
+        client.post("/api/auth/sign-up", json=VALID_SIGNUP_PAYLOAD)
 
         saved_doc = mock_db["users"].insert_one.call_args[0][0]
         assert saved_doc["password"] != "Secret123!"
@@ -157,10 +161,10 @@ class TestSignUp:
 
 class TestLogin:
     def test_login_success(self, client, mock_db):
-        mock_db["users"].find_one.return_value = VALID_USER_DOC.copy()
+        mock_db["users"].find_one.return_value = valid_user_doc().copy()
 
         resp = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={"username": "test@my.unt.edu", "password": "Secret123!"},
         )
 
@@ -170,10 +174,10 @@ class TestLogin:
         assert "access_token" in body
 
     def test_login_wrong_password(self, client, mock_db):
-        mock_db["users"].find_one.return_value = VALID_USER_DOC.copy()
+        mock_db["users"].find_one.return_value = valid_user_doc().copy()
 
         resp = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={"username": "test@my.unt.edu", "password": "WrongPass!"},
         )
 
@@ -184,14 +188,14 @@ class TestLogin:
         mock_db["users"].find_one.return_value = None
 
         resp = client.post(
-            "/auth/login",
+            "/api/auth/login",
             data={"username": "noone@my.unt.edu", "password": "whatever"},
         )
 
         assert resp.status_code == 401
 
     def test_login_missing_fields(self, client):
-        resp = client.post("/auth/login", data={})
+        resp = client.post("/api/auth/login", data={})
         assert resp.status_code == 422
 
 
@@ -205,7 +209,7 @@ class TestGetCurrentUser:
         return create_access_token({"sub": sub})
 
     def test_valid_token_returns_user(self, mock_db):
-        user_doc = VALID_USER_DOC.copy()
+        user_doc = valid_user_doc().copy()
         mock_db["users"].find_one.return_value = user_doc
 
         token = self._make_token()

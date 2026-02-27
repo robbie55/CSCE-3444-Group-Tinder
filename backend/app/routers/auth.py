@@ -5,6 +5,7 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
+from pydantic import BaseModel
 from pymongo.errors import DuplicateKeyError
 
 from app.db.connect import get_db
@@ -12,11 +13,23 @@ from app.models.schemas import UserCreate, UserRead
 
 router = APIRouter()
 
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-fallback-secret")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+def _get_jwt_secret() -> str:
+    return os.getenv("JWT_SECRET", "dev-fallback-secret")
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class SignUpResponse(TokenResponse):
+    user: UserRead
 
 
 def create_access_token(data: dict) -> str:
@@ -24,7 +37,7 @@ def create_access_token(data: dict) -> str:
     to_encode["exp"] = datetime.now(timezone.utc) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
-    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return jwt.encode(to_encode, _get_jwt_secret(), algorithm=JWT_ALGORITHM)
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_db)):
@@ -34,7 +47,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_db)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token, _get_jwt_secret(), algorithms=[JWT_ALGORITHM])
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -59,7 +72,7 @@ def verify_password(raw_pass: str, hashed_pass: str) -> bool:
     return bcrypt.checkpw(raw_pass.encode("utf-8"), hashed_pass.encode("utf-8"))
 
 
-@router.post("/sign-up")
+@router.post("/sign-up", response_model=SignUpResponse)
 def sign_up(user: UserCreate, db=Depends(get_db)):
     new_user = user.model_dump()
     new_user["password"] = hash_password(new_user["password"])
@@ -82,7 +95,7 @@ def sign_up(user: UserCreate, db=Depends(get_db)):
     }
 
 
-@router.post("/login")
+@router.post("/login", response_model=TokenResponse)
 def login(credentials: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
     username, password = credentials.username, credentials.password
     user_db = db["users"].find_one({"email": username})

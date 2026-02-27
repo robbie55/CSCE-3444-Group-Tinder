@@ -28,7 +28,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 # ROUTES
 app.include_router(users.router, prefix="/api", tags=["users"])
-app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 
 @app.get("/")
