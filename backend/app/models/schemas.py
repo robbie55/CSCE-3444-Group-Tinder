@@ -38,6 +38,7 @@ class UserRead(UserBase):
     created_at: datetime
 
 
+# schema for patch aka to edit current user
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     full_name: Optional[str] = None
