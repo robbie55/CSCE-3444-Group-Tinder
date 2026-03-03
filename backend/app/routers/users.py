@@ -20,28 +20,6 @@ def list_users(db=Depends(get_db)):
     return users
 
 
-# get one user by id , returns UserRead model
-@router.get("/users/{user_id}", response_model=UserRead)
-def get_user_by_id(user_id: str, db=Depends(get_db)):
-    try:
-        oid = ObjectId(user_id)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user id format.",
-        )
-
-    user_doc = db["users"].find_one({"_id": oid})
-    if not user_doc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found.",
-        )
-
-    user_doc["_id"] = str(user_doc["_id"])
-    return UserRead(**user_doc)
-
-
 # current user , uses authentication
 @router.get("/users/me", response_model=UserRead)
 def get_me(current_user=Depends(get_current_user)):
@@ -78,3 +56,25 @@ def update_me(
 def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
     db["users"].delete_one({"_id": ObjectId(current_user["_id"])})
     return {"detail": "User deleted"}
+
+
+# get one user by id , returns UserRead model
+@router.get("/users/{user_id}", response_model=UserRead)
+def get_user_by_id(user_id: str, db=Depends(get_db)):
+    try:
+        oid = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user id format.",
+        )
+
+    user_doc = db["users"].find_one({"_id": oid})
+    if not user_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    user_doc["_id"] = str(user_doc["_id"])
+    return UserRead(**user_doc)
