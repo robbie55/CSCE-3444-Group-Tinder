@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Dict, List, Optional
 
-from pydantic import BaseModel, BeforeValidator, EmailStr, Field, HttpUrl
+from pydantic import BaseModel, BeforeValidator, ConfigDict, EmailStr, Field, HttpUrl
 
 from app.models.enums import Major
 
@@ -31,13 +31,11 @@ class UserCreate(UserBase):
 
 # Read: What the API returns to the frontend
 class UserRead(UserBase):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     avatar_url: Optional[str] = None
     created_at: datetime
-
-    class Config:
-        populate_by_name = True  # allows us to us .id rather than ._id
-        arbitrary_types_allowed = True  # needed for ObjectId Handling
 
 
 # =======================
@@ -58,11 +56,9 @@ class GroupCreate(GroupBase):
 
 
 class GroupRead(GroupBase):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
     created_by: PyObjectId  # user id of the owner
     members: List[UserRead] = []  # includes nested objects
     created_at: datetime
-
-    class Config:
-        populate_by_name = True  # see UserCreate for why include the Config
-        arbitrary_types_allowed = True
