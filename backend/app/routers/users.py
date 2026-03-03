@@ -6,11 +6,14 @@ from app.models.schemas import UserRead, UserUpdate
 from app.routers.auth import get_current_user
 
 router = APIRouter()
+# all routes are protected, meaning only those who have an account aka have access token
+# are able to use any of the following api calls. Outsiders are not able to hit endpoint and see
+# student sensitive data
 
 
 # list all users, returns list of all users
 @router.get("/users", response_model=list[UserRead])
-def list_users(db=Depends(get_db)):
+def list_users(db=Depends(get_db), current_user=Depends(get_current_user)):
     # db is the Mongo Database object
     allUsers = db["users"].find({})
     users = []
@@ -20,13 +23,13 @@ def list_users(db=Depends(get_db)):
     return users
 
 
-# current user , uses authentication
+# current user
 @router.get("/users/me", response_model=UserRead)
 def get_me(current_user=Depends(get_current_user)):
     return UserRead(**current_user)
 
 
-# update current user, uses authentication
+# update current user
 @router.patch("/users/me", response_model=UserRead)
 def update_me(
     user_update: UserUpdate, current_user=Depends(get_current_user), db=Depends(get_db)
@@ -50,7 +53,7 @@ def update_me(
     return UserRead(**updated)
 
 
-# delete current user , uses authentication
+# delete current user
 # frontend will have to clear token and redirect to login/register page
 @router.delete("/users/me", status_code=status.HTTP_200_OK)
 def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
@@ -60,7 +63,9 @@ def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
 
 # get one user by id , returns UserRead model
 @router.get("/users/{user_id}", response_model=UserRead)
-def get_user_by_id(user_id: str, db=Depends(get_db)):
+def get_user_by_id(
+    user_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
+):
     try:
         oid = ObjectId(user_id)
     except Exception:
