@@ -38,6 +38,15 @@ class UserRead(UserBase):
     created_at: datetime
 
 
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    full_name: Optional[str] = None
+    major: Optional[Major] = None
+    bio: Optional[str] = None
+    skills: Optional[List[str]] = None
+    external_links: Optional[Dict[str, HttpUrl]] = None
+
+
 # =======================
 # GROUP MODELS
 # =======================
