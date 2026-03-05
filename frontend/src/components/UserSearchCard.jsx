@@ -3,35 +3,36 @@ import './UserSearchCard.css';
 
 // basic card template
 // has student name and email
-export function UserSearchCard({ user }) {
+export default function UserSearchCard({ user }) {
     return (
         <div className='profile-card'>
             <div className='profile-card-content'>
                 <div className='profile-card-avatar'>
-                    <img className='profile-avatar-image'></img>
+                    <img
+                        src='user.avatar_url'
+                        alt='The avatar image'
+                        className='profile-avatar-image'
+                    ></img>
                 </div>
             </div>
             <div className='profile-card-info'>
                 <div className='profile-info-header'>
                     <div className='profile-info-name'>
-                        <h3>{user.name}</h3>
+                        <h3>{user.full_name}</h3>
                         <p className='profile-info-meta'></p>
                     </div>
-                    <span className='profile-availability'></span>
                 </div>
-                <p className='profile-bio'></p>
+                <p className='profile-bio'>{user.bio}</p>
                 <div className='profile-details'>
                     <div className='detail-row'>
-                        <div className='detail-skills'></div>
-                    </div>
-                    <div className='detail-row'>
-                        <div className='detail-courses'></div>
+                        {/*Will need to expand user.skills*/}
+                        <div className='detail-skills'>{user.skills}</div>
                     </div>
                 </div>
                 <div className='detail-row'>
                     <p className='profile-email'>{user.email}</p>
-                    <a href='' className='profile-github'></a>
-                    <a href='' className='profile-linkedin'></a>
+                    <a href='str(user.external_links.github)' className='profile-github'></a>
+                    <a href='str(user.external_links.linkedin)' className='profile-linkedin'></a>
                 </div>
             </div>
         </div>
@@ -41,7 +42,13 @@ export function UserSearchCard({ user }) {
 // verification to ensure these variables exist
 UserSearchCard.propTypes = {
     user: PropTypes.shape({
-        name: PropTypes.string.isRequired,
+        full_name: PropTypes.string.isRequired,
         email: PropTypes.string.isRequired,
+        bio: PropTypes.arrayOf(PropTypes.string),
+        skills: PropTypes.arrayOf(PropTypes.string).isRequired,
+        external_links: PropTypes.shape({
+            key: PropTypes.string.isRequired,
+            link: PropTypes.string.isRequired,
+        }),
     }).isRequired,
 };
