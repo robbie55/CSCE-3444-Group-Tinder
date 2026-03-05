@@ -1,8 +1,9 @@
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.matching import get_suggestions
 from app.db.connect import get_db
-from app.models.schemas import UserRead, UserUpdate
+from app.models.schemas import SuggestionRead, UserRead, UserUpdate
 from app.routers.auth import get_current_user
 
 router = APIRouter()
@@ -59,6 +60,22 @@ def update_me(
 def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
     db["users"].delete_one({"_id": ObjectId(current_user["_id"])})
     return {"detail": "User deleted"}
+
+
+# suggest compatible users based on skills + major
+@router.get("/users/suggestions", response_model=list[SuggestionRead])
+def suggest_users(
+    limit: int = 10,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    candidates = []
+    for doc in db["users"].find({"_id": {"$ne": ObjectId(current_user["_id"])}}):
+        doc["_id"] = str(doc["_id"])
+        candidates.append(doc)
+
+    ranked = get_suggestions(current_user, candidates, limit=limit)
+    return [SuggestionRead(**user, match_score=score) for user, score in ranked]
 
 
 # get one user by id , returns UserRead model
