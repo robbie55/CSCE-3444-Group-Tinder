@@ -62,7 +62,7 @@ class GroupBase(BaseModel):
 
 
 class GroupCreate(GroupBase):
-    created_by: PyObjectId  # stores the user's ObjectId string
+    pass
 
 
 class GroupRead(GroupBase):
