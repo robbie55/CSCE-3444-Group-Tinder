@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.errors import DuplicateKeyError
 
 from app.db.connect import get_db
-from app.models.schemas import GroupCreate, GroupRead, UserRead
+from app.models.schemas import GroupCreate, GroupRead, GroupUpdate, UserRead
 from app.routers.auth import get_current_user
 
 router = APIRouter()
@@ -136,11 +136,73 @@ def get_group_by_id(
 
 
 # update group details
-# @router.patch("/{group_id}", response_model=GroupUpdate)
+@router.patch("/{group_id}", response_model=GroupRead)
 def update_group(
     group_id: str,
+    group_update: GroupUpdate,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
-    pass
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid group id format."
+        )
+
+    group_doc = db["groups"].find_one({"_id": oid})
+    if not group_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Group not found."
+        )
+
+    # check if owner of group matches with current user (auth check)
+    owner_oid = group_doc["created_by"]
+    current_user_oid = ObjectId(current_user["_id"])
+    if owner_oid != current_user_oid:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to update this group.",
+        )
+
+    update_data = group_update.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided."
+        )
+
+    # updated member count is NOT less than current len of members
+    if "max_members" in update_data:
+        current_member_count = len(group_doc.get("member_ids", []))
+        if update_data["max_members"] < current_member_count:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="max_members cannot be less than current member count.",
+            )
+
+    db["groups"].update_one({"_id": oid}, {"$set": update_data})
+
+    update_group_doc = db["groups"].find_one({"_id": oid})
+    if not update_group_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Group not found."
+        )
+
+    # building members list
+    member_ids = update_group_doc.get("member_ids", [])
+    user_filter = {"_id": {"$in": member_ids}}
+    user_cursor = db["users"].find(user_filter)
+    members: list[UserRead] = []
+
+    for user_doc in user_cursor:
+        user_doc["_id"] = str(user_doc["_id"])
+        members.append(UserRead(**user_doc))
+
+    updated_group_read = _group_doc_to_group_read(
+        group_doc=update_group_doc, members=members
+    )
+    return updated_group_read
 
 
 # delete group
