@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { UserSearchCard } from '../components/userSearchCard';
+import { apiFetch } from '../api/auth';
+import SearchFilters from '../components/SearchFilters.jsx';
+import UserSearchCard from '../components/UserSearchCard.jsx';
 import './UserSearchPage.css';
 
 // basic search page
@@ -7,15 +9,26 @@ import './UserSearchPage.css';
 export default function UserSearchPage() {
     const [_search, _setSearch] = useState('');
     const [_major, _setMajor] = useState('all');
-    const [_year, _setYear] = useState('all');
     const [_skills, _setSkills] = useState('all');
     const [_users, _setUsers] = useState([]);
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/api/users')
-            .then((response) => response.json())
-            .then((data) => _setUsers(data))
-            .catch((error) => console.error('Error fetching users: ', error));
+        async function fetchUsers() {
+            try {
+                const res = await apiFetch('/api/users');
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Error fetching users');
+                }
+
+                const userList = await res.json();
+                _setUsers(userList);
+            } catch (err) {
+                console.error('Failed to fetch users: ', err.message);
+            }
+        }
+        fetchUsers();
     }, []);
 
     const filterUsers = useCallback(
@@ -23,13 +36,12 @@ export default function UserSearchPage() {
             return (usersArray ?? []).filter((user) => {
                 const matchesSearch = user.full_name.toLowerCase().includes(_search.toLowerCase());
                 const matchesMajor = _major === 'all' || user.major === _major;
-                const matchesYear = _year === 'all' || user.year === _year;
                 const matchesSkill = _skills === 'all' || user.skills.includes(_skills);
 
-                return matchesSearch && matchesMajor && matchesYear && matchesSkill;
+                return matchesSearch && matchesMajor && matchesSkill;
             });
         },
-        [_search, _major, _year, _skills]
+        [_search, _major, _skills]
     );
 
     const _filteredUsers = useMemo(() => {
@@ -37,18 +49,31 @@ export default function UserSearchPage() {
     }, [filterUsers, _users]);
 
     return (
-        <div>
-            {_filteredUsers.length > 0 ? (
-                <div className='app-grid'>
-                    {_filteredUsers.map((user) => (
-                        <UserSearchCard key={user.id} user={user} />
-                    ))}
+        <div className='page'>
+            <div className='content'>
+                <div className='filters'>
+                    <SearchFilters
+                        search={_search}
+                        onSearchChange={_setSearch}
+                        major={_major}
+                        onMajorChange={_setMajor}
+                        skills={_skills}
+                        onSkillsChange={_setSkills}
+                    />
                 </div>
-            ) : (
-                <div className='app-grid-empty'>
-                    <p className='empty-message'>No users found</p>
-                </div>
-            )}
+
+                {_filteredUsers.length > 0 ? (
+                    <div className='users'>
+                        {_filteredUsers.map((user) => (
+                            <UserSearchCard key={user.id} user={user} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className='empty'>
+                        <p className='empty-message'>No users found</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

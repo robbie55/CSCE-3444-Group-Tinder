@@ -1,9 +1,15 @@
-import PropTypes from 'prop-types';
+import { PropTypes } from 'prop-types';
 import './UserSearchCard.css';
 
 // basic card template
 // has student name and email
 export default function UserSearchCard({ user }) {
+    const initials = user.full_name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase();
+
     return (
         <div className='profile-card'>
             <div className='profile-card-content'>
@@ -12,7 +18,11 @@ export default function UserSearchCard({ user }) {
                         src='user.avatar_url'
                         alt='The avatar image'
                         className='profile-avatar-image'
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                        }}
                     ></img>
+                    <div>{initials}</div>
                 </div>
             </div>
             <div className='profile-card-info'>
@@ -25,14 +35,39 @@ export default function UserSearchCard({ user }) {
                 <p className='profile-bio'>{user.bio}</p>
                 <div className='profile-details'>
                     <div className='detail-row'>
-                        {/*Will need to expand user.skills*/}
-                        <div className='detail-skills'>{user.skills}</div>
+                        {user.skills.slice(0, 3).map((skill, idx) => (
+                            <span key={idx} className='skill-badge'>
+                                {skill}
+                            </span>
+                        ))}
+                        {user.skills.length > 3 && (
+                            <span className='skill-badge'>+{user.skills.length - 3}</span>
+                        )}
                     </div>
-                </div>
-                <div className='detail-row'>
-                    <p className='profile-email'>{user.email}</p>
-                    <a href='str(user.external_links.github)' className='profile-github'></a>
-                    <a href='str(user.external_links.linkedin)' className='profile-linkedin'></a>
+                    <div className='detail-row'>
+                        <a
+                            href={user.external_links.github}
+                            className='external_link'
+                            target='_blank'
+                            rel='noreferrer'
+                        >
+                            GitHub
+                        </a>
+                        <a
+                            href={user.external_links.linkedin}
+                            className='external_link'
+                            target='_blank'
+                            rel='noreferrer'
+                        >
+                            LinkedIn
+                        </a>
+                    </div>
+                    <div className='detail-row'>
+                        {/* add in the link to mail to */}
+                        <a href='mailto: ' className='profile-email'>
+                            {user.username}
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,12 +78,13 @@ export default function UserSearchCard({ user }) {
 UserSearchCard.propTypes = {
     user: PropTypes.shape({
         full_name: PropTypes.string.isRequired,
-        email: PropTypes.string.isRequired,
+        username: PropTypes.string.isRequired,
         bio: PropTypes.arrayOf(PropTypes.string),
         skills: PropTypes.arrayOf(PropTypes.string).isRequired,
         external_links: PropTypes.shape({
-            key: PropTypes.string.isRequired,
-            link: PropTypes.string.isRequired,
-        }),
+            github: PropTypes.string.isRequired,
+            linkedin: PropTypes.string.isRequired,
+        }).isRequired,
+        avatar_url: PropTypes.string,
     }).isRequired,
 };

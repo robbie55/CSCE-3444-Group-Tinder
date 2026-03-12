@@ -89,12 +89,32 @@
     gap: 0.25rem;
 }
 
-.detail-courses {
-    font-size: 0.875rem;
-    color: #4b5563;
+.skill-badge {
+    padding: 0.125rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    color: #374151;
+    background-color: white;
 }
 
 .profile-email {
     font-size: 0.875rem;
+    color: #4b5563;
+}
+
+.external_link {
+    font-size: 0.875rem;
+    color: #4b5563;
+    text-decoration: underline;
+}
+
+a:link:active,
+a:visited:active {
+    color: #4b5563;
+}
+
+a:link:active,
+a:visited:active {
     color: #4b5563;
 }
