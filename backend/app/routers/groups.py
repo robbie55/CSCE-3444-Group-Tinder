@@ -128,7 +128,7 @@ def get_group_by_id(
     members: list[UserRead] = []
 
     for user_doc in user_cursor:
-        user_cursor["_id"] = str(user_cursor["_id"])
+        user_doc["_id"] = str(user_doc["_id"])
         members.append(UserRead(**user_doc))
 
     group_read = _group_doc_to_group_read(group_doc=group_doc, members=members)
