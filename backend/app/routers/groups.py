@@ -9,14 +9,31 @@ from app.models.schemas import GroupCreate, GroupRead, UserRead
 from app.routers.auth import get_current_user
 
 router = APIRouter()
-# can i do this db =Depends(get_db), current_user=Depends(get_current_user)
-# then just pass db into the parameters for each function like create_group(db,current_user)
+
+
+# Helper: turn MongoDB group doc to GroupRead object
+def _group_doc_to_group_read(group_doc: dict, members: list[UserRead]) -> GroupRead:
+    return GroupRead(
+        _id=str(group_doc["_id"]),
+        created_by=str(group_doc["created_by"]),
+        members=members,
+        created_at=group_doc["created_at"],
+        name=group_doc["name"],
+        description=group_doc["description"],
+        course_code=group_doc.get("course_code"),
+        max_members=group_doc["max_members"],
+        tags=group_doc.get("tags", []),
+    )
 
 
 # create group
 @router.post("/", response_model=GroupRead, status_code=status.HTTP_201_CREATED)
 def create_group(
-    group: GroupCreate, db=Depends(get_db), current_user=Depends(get_current_user)
+    group: GroupCreate,
+    db=Depends(get_db),
+    current_user=Depends(
+        get_current_user
+    ),  # GroupCreate is the pydantic model that request from the frontend uses
 ):
     group_dict = group.model_dump()  # convert to dictonary
 
@@ -55,26 +72,34 @@ def create_group(
         members.append(UserRead(**user_doc))
 
     # what api returns
-    return GroupRead(
-        _id=group_dict["_id"],
-        created_by=current_user["_id"],
-        members=members,
-        created_at=group_dict["created_at"],
-        name=group_dict["name"],
-        description=group_dict["description"],
-        course_code=group_dict.get("course_code"),
-        max_members=group_dict["max_members"],
-        tags=group_dict.get("tags", []),
-    )
+    return _group_doc_to_group_read(group_doc=group_dict, members=members)
 
 
 # List all groups
 @router.get(
     "/",
     response_model=list[GroupRead],
-)  # not sure if its groupread or groupcreate since i think i need the Pyobjectid, double check this
+)
 def list_groups(db=Depends(get_db), current_user=Depends(get_current_user)):
-    pass
+    list_of_groups = []
+    groups_cursor = db["groups"].find({})
+
+    for group_doc in groups_cursor:
+        member_ids = group_doc.get("member_ids", [])  # list of member ids
+        user_filter = {
+            "_id": {"$in": member_ids}
+        }  # Find all documents where _id is one of the values in member_ids
+
+        members = []
+        user_cursor = db["users"].find(user_filter)
+        for user_doc in user_cursor:
+            user_doc["_id"] = str(user_doc["_id"])
+            members.append(UserRead(**user_doc))
+
+        group_read = _group_doc_to_group_read(group_doc=group_doc, members=members)
+        list_of_groups.append(group_read)
+
+    return list_of_groups
 
 
 # todo: For each group doc:
