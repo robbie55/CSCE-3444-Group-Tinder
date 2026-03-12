@@ -72,7 +72,8 @@ def create_group(
         members.append(UserRead(**user_doc))
 
     # what api returns
-    return _group_doc_to_group_read(group_doc=group_dict, members=members)
+    group_read = _group_doc_to_group_read(group_doc=group_dict, members=members)
+    return group_read
 
 
 # List all groups
@@ -102,30 +103,36 @@ def list_groups(db=Depends(get_db), current_user=Depends(get_current_user)):
     return list_of_groups
 
 
-# todo: For each group doc:
-# Convert _id to str.
-# Load all user docs for member_ids from db["users"].
-# Transform them into UserRead models.
-# Build a GroupRead object.
-# Return the list.
-
-
 # single group by id
 @router.get("/{group_id}", response_model=GroupRead)
 def get_group_by_id(
     group_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
 ):
-    pass
+    try:
+        oid = ObjectId(group_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid group id format."
+        )
 
+    group_doc = db["groups"].find_one({"_id": oid})
+    if not group_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found.",
+        )
+    group_doc["_id"] = str(group_doc["_id"])
+    member_ids = group_doc.get("member_ids", [])
+    user_filter = {"_id": {"$in": member_ids}}
+    user_cursor = db["users"].find(user_filter)
+    members: list[UserRead] = []
 
-# Todo: Parse group_id into an ObjectId.
-# If parsing fails, return 400 Bad Request (same as users router).
-# Find the group with db["groups"].find_one({"_id": oid}).
-# If not found, return 404 Not Found.
-# Convert _id to str.
-# Fetch member user docs from db["users"] using the stored member_ids.
-# Build UserRead models for each member.
-# Return a GroupRead populated with these values.
+    for user_doc in user_cursor:
+        user_cursor["_id"] = str(user_cursor["_id"])
+        members.append(UserRead(**user_doc))
+
+    group_read = _group_doc_to_group_read(group_doc=group_doc, members=members)
+    return group_read
 
 
 # update group details
