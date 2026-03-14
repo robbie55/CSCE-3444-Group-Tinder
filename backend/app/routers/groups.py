@@ -219,6 +219,38 @@ def add_member(
     return _group_doc_to_group_read(group_doc=updated_group_doc, members=members)
 
 
-# remove/delete memebr from group
+@router.post("/{group_id}/leave", response_model=GroupRead)
+def leave_group(
+    group_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
+):
+    oid = _parse_group_id(group_id)
+    group_doc = _get_group_doc_or_404(db, oid)
+    current_user_oid = ObjectId(current_user["_id"])
+    member_ids = group_doc.get("member_ids", [])
 
-# get group by id? this might have to go at the bottom
+    if group_doc["created_by"] == current_user_oid:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Owner cannot leave the group. Delete the group or transfer ownership first.",
+        )
+
+    if current_user_oid not in member_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not a member of this group.",
+        )
+
+    db["groups"].update_one(
+        {"_id": oid},
+        {"$pull": {"member_ids": current_user_oid}},
+    )
+
+    updated_group_doc = db["groups"].find_one({"_id": oid})
+
+    if not updated_group_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found.",
+        )
+    members = _fetch_members_as_user_reads(db, updated_group_doc.get("member_ids", []))
+    return _group_doc_to_group_read(group_doc=updated_group_doc, members=members)
