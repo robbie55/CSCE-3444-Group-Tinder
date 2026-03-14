@@ -11,7 +11,7 @@ from app.routers.auth import get_current_user
 router = APIRouter()
 
 
-# Helper: turn MongoDB group doc to GroupRead object
+# Helpers:
 def _group_doc_to_group_read(group_doc: dict, members: list[UserRead]) -> GroupRead:
     return GroupRead(
         _id=str(group_doc["_id"]),
@@ -24,6 +24,55 @@ def _group_doc_to_group_read(group_doc: dict, members: list[UserRead]) -> GroupR
         max_members=group_doc["max_members"],
         tags=group_doc.get("tags", []),
     )
+
+
+def _parse_group_id(group_id: str):
+    try:
+        return ObjectId(group_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid group id format.",
+        )
+
+
+def _get_group_doc_or_404(db, oid: ObjectId) -> dict:
+    group_doc = db["groups"].find_one({"_id": oid})
+    if not group_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found.",
+        )
+    return group_doc
+
+
+def _fetch_members_as_user_reads(db, member_ids: list) -> list[UserRead]:
+    if not member_ids:
+        return []
+    user_filter = {"_id": {"$in": member_ids}}
+    members = []
+    for user_doc in db["users"].find(user_filter):
+        user_doc["_id"] = str(user_doc["_id"])
+        members.append(UserRead(**user_doc))
+    return members
+
+
+def _require_group_owner(
+    group_id: str,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+) -> dict:
+
+    oid = _parse_group_id(group_id)
+    group_doc = _get_group_doc_or_404(db, oid)
+    owner_oid = group_doc["created_by"]
+    current_user_oid = ObjectId(current_user["_id"])
+    if owner_oid != current_user_oid:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Current user does not match group creator.",
+        )
+    return group_doc
 
 
 # create group
@@ -60,43 +109,19 @@ def create_group(
     group_dict["_id"] = result.inserted_id  # id for the group
     group_dict["_id"] = str(group_dict["_id"])
 
-    # making members list
-    members: list[UserRead] = []
-    for member_oid in group_dict["member_ids"]:
-        user_doc = db["users"].find_one({"_id": member_oid})
-        if not user_doc:
-            raise HTTPException(
-                status_code=500, detail="Group creator not found in database."
-            )
-        user_doc["_id"] = str(user_doc["_id"])
-        members.append(UserRead(**user_doc))
-
-    # what api returns
+    members = _fetch_members_as_user_reads(db, group_dict["member_ids"])
     group_read = _group_doc_to_group_read(group_doc=group_dict, members=members)
     return group_read
 
 
 # List all groups
-@router.get(
-    "/",
-    response_model=list[GroupRead],
-)
-def list_groups(db=Depends(get_db), current_user=Depends(get_current_user)):
+@router.get("/", response_model=list[GroupRead])
+def list_groups(db=Depends(get_db)):
     list_of_groups = []
     groups_cursor = db["groups"].find({})
 
     for group_doc in groups_cursor:
-        member_ids = group_doc.get("member_ids", [])  # list of member ids
-        user_filter = {
-            "_id": {"$in": member_ids}
-        }  # Find all documents where _id is one of the values in member_ids
-
-        members = []
-        user_cursor = db["users"].find(user_filter)
-        for user_doc in user_cursor:
-            user_doc["_id"] = str(user_doc["_id"])
-            members.append(UserRead(**user_doc))
-
+        members = _fetch_members_as_user_reads(db, group_doc.get("member_ids", []))
         group_read = _group_doc_to_group_read(group_doc=group_doc, members=members)
         list_of_groups.append(group_read)
 
@@ -105,66 +130,21 @@ def list_groups(db=Depends(get_db), current_user=Depends(get_current_user)):
 
 # single group by id
 @router.get("/{group_id}", response_model=GroupRead)
-def get_group_by_id(
-    group_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
-):
-    try:
-        oid = ObjectId(group_id)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid group id format."
-        )
-
-    group_doc = db["groups"].find_one({"_id": oid})
-    if not group_doc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Group not found.",
-        )
-    group_doc["_id"] = str(group_doc["_id"])
-    member_ids = group_doc.get("member_ids", [])
-    user_filter = {"_id": {"$in": member_ids}}
-    user_cursor = db["users"].find(user_filter)
-    members: list[UserRead] = []
-
-    for user_doc in user_cursor:
-        user_doc["_id"] = str(user_doc["_id"])
-        members.append(UserRead(**user_doc))
-
-    group_read = _group_doc_to_group_read(group_doc=group_doc, members=members)
-    return group_read
+def get_group_by_id(group_id: str, db=Depends(get_db)):
+    oid = _parse_group_id(group_id)
+    group_doc = _get_group_doc_or_404(db, oid)
+    members = _fetch_members_as_user_reads(db, group_doc.get("member_ids", []))
+    return _group_doc_to_group_read(group_doc=group_doc, members=members)
 
 
 # update group details
 @router.patch("/{group_id}", response_model=GroupRead)
 def update_group(
-    group_id: str,
     group_update: GroupUpdate,
     db=Depends(get_db),
-    current_user=Depends(get_current_user),
+    group_doc=Depends(_require_group_owner),
 ):
-    try:
-        oid = ObjectId(group_id)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid group id format."
-        )
-
-    group_doc = db["groups"].find_one({"_id": oid})
-    if not group_doc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Group not found."
-        )
-
-    # check if owner of group matches with current user (auth check)
-    owner_oid = group_doc["created_by"]
-    current_user_oid = ObjectId(current_user["_id"])
-    if owner_oid != current_user_oid:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not allowed to update this group.",
-        )
-
+    oid = group_doc["_id"]
     update_data = group_update.model_dump(exclude_unset=True)
 
     if not update_data:
@@ -172,7 +152,6 @@ def update_group(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No fields provided."
         )
 
-    # updated member count is NOT less than current len of members
     if "max_members" in update_data:
         current_member_count = len(group_doc.get("member_ids", []))
         if update_data["max_members"] < current_member_count:
@@ -182,36 +161,63 @@ def update_group(
             )
 
     db["groups"].update_one({"_id": oid}, {"$set": update_data})
-
-    update_group_doc = db["groups"].find_one({"_id": oid})
-    if not update_group_doc:
+    updated_group_doc = db["groups"].find_one({"_id": oid})
+    if not updated_group_doc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Group not found."
         )
 
-    # building members list
-    member_ids = update_group_doc.get("member_ids", [])
-    user_filter = {"_id": {"$in": member_ids}}
-    user_cursor = db["users"].find(user_filter)
-    members: list[UserRead] = []
-
-    for user_doc in user_cursor:
-        user_doc["_id"] = str(user_doc["_id"])
-        members.append(UserRead(**user_doc))
-
-    updated_group_read = _group_doc_to_group_read(
-        group_doc=update_group_doc, members=members
-    )
-    return updated_group_read
+    members = _fetch_members_as_user_reads(db, updated_group_doc.get("member_ids", []))
+    return _group_doc_to_group_read(group_doc=updated_group_doc, members=members)
 
 
 # delete group
-@router.delete("/{group_id}")
-def delete_group():
-    pass
+@router.delete("/{group_id}", status_code=status.HTTP_200_OK)
+def delete_group(
+    db=Depends(get_db),
+    group_doc=Depends(_require_group_owner),
+):
+    db["groups"].delete_one({"_id": group_doc["_id"]})
+    return {"detail": "Group deleted"}
 
 
 # add member to group
+@router.post("/{group_id}/join", response_model=GroupRead)
+def add_member(
+    group_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
+):
+    oid = _parse_group_id(group_id)
+    group_doc = _get_group_doc_or_404(db, oid)
+    current_user_oid = ObjectId(current_user["_id"])
+    member_ids = group_doc.get("member_ids", [])
+
+    if current_user_oid in member_ids:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User already in group.",
+        )
+
+    # checking length of group
+    group_max_members = group_doc["max_members"]
+    if len(member_ids) >= group_max_members:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Group is full.",
+        )
+
+    db["groups"].update_one(
+        {"_id": oid},
+        {"$addToSet": {"member_ids": current_user_oid}},
+    )
+    updated_group_doc = db["groups"].find_one({"_id": oid})
+    if not updated_group_doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found.",
+        )
+    members = _fetch_members_as_user_reads(db, updated_group_doc.get("member_ids", []))
+    return _group_doc_to_group_read(group_doc=updated_group_doc, members=members)
+
 
 # remove/delete memebr from group
 
