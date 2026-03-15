@@ -40,12 +40,12 @@ export default function SearchFilters({
                     className='select'
                 >
                     <option value='all'>All Skills</option>
-                    <option value='PY'>Python</option>
+                    <option value='Python'>Python</option>
                     <option value='C'>C</option>
-                    <option value='PLUS'>C++</option>
-                    <option value='SHARP'>C#</option>
-                    <option value='JS'>JavaScript</option>
-                    <option value='JAVA'>Java</option>
+                    <option value='C++'>C++</option>
+                    <option value='C#'>C#</option>
+                    <option value='JavaScript'>JavaScript</option>
+                    <option value='Java'>Java</option>
                 </select>
             </div>
         </div>

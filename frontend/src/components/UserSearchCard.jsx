@@ -12,28 +12,31 @@ export default function UserSearchCard({ user }) {
 
     return (
         <div className='profile-card'>
-            <div className='profile-card-content'>
-                <div className='profile-card-avatar'>
-                    <img
-                        src='user.avatar_url'
-                        alt='The avatar image'
-                        className='profile-avatar-image'
-                        onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                        }}
-                    ></img>
-                    <div>{initials}</div>
+            <div className='card-header'>
+                <div className='card-avatar'>
+                    {user.avatar_url ? (
+                        <img
+                            src={user.avatar_url}
+                            alt='The avatar image'
+                            className='avatar-image'
+                            onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                            }}
+                        ></img>
+                    ) : (
+                        <div>{initials}</div>
+                    )}
                 </div>
             </div>
-            <div className='profile-card-info'>
-                <div className='profile-info-header'>
-                    <div className='profile-info-name'>
+            <div className='card-info'>
+                <div className='info-header'>
+                    <div className='info-name'>
                         <h3>{user.full_name}</h3>
-                        <p className='profile-info-meta'></p>
+                        <p className='info-meta'></p>
                     </div>
                 </div>
-                <p className='profile-bio'>{user.bio}</p>
-                <div className='profile-details'>
+                <p className='bio'>{user.bio}</p>
+                <div className='details'>
                     <div className='detail-row'>
                         {user.skills.slice(0, 3).map((skill, idx) => (
                             <span key={idx} className='skill-badge'>
@@ -63,8 +66,7 @@ export default function UserSearchCard({ user }) {
                         </a>
                     </div>
                     <div className='detail-row'>
-                        {/* add in the link to mail to */}
-                        <a href='mailto: ' className='profile-email'>
+                        <a href={`mailto: ${user.username}`} className='profile-email'>
                             {user.username}
                         </a>
                     </div>
