@@ -32,7 +32,6 @@ export default function UserSearchCard({ user }) {
                 <div className='info-header'>
                     <div className='info-name'>
                         <h3>{user.full_name}</h3>
-                        <p className='info-meta'></p>
                     </div>
                 </div>
                 <p className='bio'>{user.bio}</p>

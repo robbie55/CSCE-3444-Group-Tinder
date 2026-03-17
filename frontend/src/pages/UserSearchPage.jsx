@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../api/auth';
 import SearchFilters from '../components/SearchFilters.jsx';
+import Sidebar from '../components/Sidebar.jsx';
 import UserSearchCard from '../components/UserSearchCard.jsx';
 import './UserSearchPage.css';
 
@@ -50,6 +51,7 @@ export default function UserSearchPage() {
 
     return (
         <div className='page'>
+            <Sidebar></Sidebar>
             <div className='content'>
                 <div className='filters'>
                     <SearchFilters

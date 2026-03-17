@@ -27,12 +27,12 @@ export default function SearchFilters({
                     className='select'
                 >
                     <option value='all'>All Majors</option>
-                    <option value='CS'>Computer Science</option>
-                    <option value='CE'>Computer Engineering</option>
-                    <option value='IT'>Information Technology</option>
-                    <option value='DS'>Data Science</option>
-                    <option value='CYBER'>Cyberseciruty</option>
-                    <option value='OTHER'>Other</option>
+                    <option value='Computer Science'>Computer Science</option>
+                    <option value='Computer Engineering'>Computer Engineering</option>
+                    <option value='Information Technology'>Information Technology</option>
+                    <option value='Data Science'>Data Science</option>
+                    <option value='Cybersecurity'>Cyberseciruty</option>
+                    <option value='Other'>Other</option>
                 </select>
                 <select
                     value={skills}
