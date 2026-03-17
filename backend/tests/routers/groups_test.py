@@ -48,7 +48,7 @@ def client(mock_db):
     app.dependency_overrides[get_current_user] = _fake_current_user
 
     yield TestClient(app)
-    
+
     app.dependency_overrides.clear()
 
 
