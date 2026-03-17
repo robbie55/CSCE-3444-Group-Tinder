@@ -47,9 +47,8 @@ def client(mock_db):
 
     app.dependency_overrides[get_current_user] = _fake_current_user
 
-    with TestClient(app) as test_client:
-        yield test_client
-
+    yield TestClient(app)
+    
     app.dependency_overrides.clear()
 
 
@@ -57,8 +56,7 @@ def client(mock_db):
 def client_no_auth(mock_db):
     """Client with only get_db overridden; get_current_user runs for real (no token → 401)."""
     app.dependency_overrides[get_db] = lambda: mock_db
-    with TestClient(app) as test_client:
-        yield test_client
+    yield TestClient(app)
     app.dependency_overrides.clear()
 
 
