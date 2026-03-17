@@ -51,9 +51,11 @@ export default function UserSearchPage() {
 
     return (
         <div className='page'>
-            <Sidebar></Sidebar>
+            <div className='page-sidebar'>
+                <Sidebar></Sidebar>
+            </div>
             <div className='content'>
-                <div className='filters'>
+                <div className='search-filters'>
                     <SearchFilters
                         search={_search}
                         onSearchChange={_setSearch}

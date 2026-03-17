@@ -4,7 +4,7 @@ import './Sidebar.css';
 export default function Sidebar() {
     return (
         <div className='sidebar'>
-            <div className='header'>
+            <div className='title'>
                 <span>UNT</span>
             </div>
             <div className='options'>
@@ -19,6 +19,11 @@ export default function Sidebar() {
                 </Link>
                 <Link className='link' to='#'>
                     Dashboard
+                </Link>
+            </div>
+            <div className='logout'>
+                <Link className='link' to='/login'>
+                    Log out
                 </Link>
             </div>
         </div>
