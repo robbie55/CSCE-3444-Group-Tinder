@@ -100,7 +100,7 @@ def create_group(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="A group with this name already exists.",
         )
-    except HTTPException:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create group.",
