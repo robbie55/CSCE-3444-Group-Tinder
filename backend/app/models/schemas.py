@@ -62,7 +62,7 @@ class GroupBase(BaseModel):
 
 
 class GroupCreate(GroupBase):
-    created_by: PyObjectId  # stores the user's ObjectId string
+    pass
 
 
 class GroupRead(GroupBase):
@@ -72,3 +72,11 @@ class GroupRead(GroupBase):
     created_by: PyObjectId  # user id of the owner
     members: List[UserRead] = []  # includes nested objects
     created_at: datetime
+
+
+class GroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    course_code: Optional[str] = None
+    max_members: Optional[int] = None
+    tags: Optional[List[str]] = None
