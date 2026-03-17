@@ -54,6 +54,15 @@ def client(mock_db):
 
 
 @pytest.fixture()
+def client_no_auth(mock_db):
+    """Client with only get_db overridden; get_current_user runs for real (no token → 401)."""
+    app.dependency_overrides[get_db] = lambda: mock_db
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture()
 def valid_user_doc():
     return {
         "_id": ObjectId(TEST_USER_ID),
@@ -260,6 +269,11 @@ class TestListGroups:
         assert data[1]["name"] == "Study Group 2"
         assert len(data[1]["members"]) == len(group2["member_ids"])
 
+    def test_list_groups_unauthenticated_returns_401(self, client_no_auth):
+        """No Bearer token → 401 Unauthorized."""
+        resp = client_no_auth.get("/api/groups/")
+        assert resp.status_code == 401
+
 
 # ---------------------------------------------------------------------------
 # GET /api/groups/{group_id} (get_group_by_id)
@@ -299,6 +313,11 @@ class TestGetGroupById:
 
         assert resp.status_code == 404
         assert "Group not found" in resp.json()["detail"]
+
+    def test_get_group_by_id_unauthenticated_returns_401(self, client_no_auth):
+        """No Bearer token → 401 Unauthorized."""
+        resp = client_no_auth.get(f"/api/groups/{TEST_GROUP_ID}")
+        assert resp.status_code == 401
 
 
 # ---------------------------------------------------------------------------

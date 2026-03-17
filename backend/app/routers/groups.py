@@ -116,7 +116,7 @@ def create_group(
 
 # List all groups
 @router.get("/", response_model=list[GroupRead])
-def list_groups(db=Depends(get_db)):
+def list_groups(db=Depends(get_db), current_user=Depends(get_current_user)):
     list_of_groups = []
     groups_cursor = db["groups"].find({})
 
@@ -130,7 +130,9 @@ def list_groups(db=Depends(get_db)):
 
 # single group by id
 @router.get("/{group_id}", response_model=GroupRead)
-def get_group_by_id(group_id: str, db=Depends(get_db)):
+def get_group_by_id(
+    group_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
+):
     oid = _parse_group_id(group_id)
     group_doc = _get_group_doc_or_404(db, oid)
     members = _fetch_members_as_user_reads(db, group_doc.get("member_ids", []))
