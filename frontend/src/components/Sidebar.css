@@ -29,8 +29,12 @@
 
 .link {
     display: block;
-    font-size: 14px;
+    font-size: auto;
     font-weight: 500;
     color: white;
     text-decoration: none;
+}
+
+.link:hover {
+    color: #9ca3af;
 }

@@ -52,7 +52,7 @@ export default function UserSearchPage() {
     return (
         <div className='page'>
             <div className='page-sidebar'>
-                <Sidebar></Sidebar>
+                <Sidebar />
             </div>
             <div className='content'>
                 <div className='search-filters'>

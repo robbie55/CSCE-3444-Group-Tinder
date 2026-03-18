@@ -8,17 +8,17 @@ export default function Sidebar() {
                 <span>UNT</span>
             </div>
             <div className='options'>
-                <Link className='link' to='#'>
+                <Link className='link' to='/dashboard'>
                     Dashboard
                 </Link>
-                <Link className='link' to='#'>
-                    Dashboard
+                <Link className='link' to='/profile'>
+                    Profile
                 </Link>
-                <Link className='link' to='#'>
-                    Dashboard
+                <Link className='link' to='/groups'>
+                    Groups
                 </Link>
-                <Link className='link' to='#'>
-                    Dashboard
+                <Link className='link' to='/search'>
+                    Search
                 </Link>
             </div>
             <div className='logout'>

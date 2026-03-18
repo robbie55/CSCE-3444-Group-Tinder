@@ -36,15 +36,12 @@ export default function UserSearchCard({ user }) {
                 </div>
                 <p className='bio'>{user.bio}</p>
                 <div className='details'>
-                    <div className='detail-row'>
-                        {user.skills.slice(0, 3).map((skill, idx) => (
+                    <div className='skill-row'>
+                        {user.skills.map((skill, idx) => (
                             <span key={idx} className='skill-badge'>
                                 {skill}
                             </span>
                         ))}
-                        {user.skills.length > 3 && (
-                            <span className='skill-badge'>+{user.skills.length - 3}</span>
-                        )}
                     </div>
                     <div className='detail-row'>
                         <a

@@ -77,6 +77,13 @@
     gap: 8px;
 }
 
+.skill-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 8px;
+}
+
 .skill-badge {
     padding: 2px 8px;
     border: 1px solid #d1d5db;
