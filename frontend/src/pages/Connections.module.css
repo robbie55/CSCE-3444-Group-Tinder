@@ -1,0 +1,279 @@
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.header h1 {
+    margin: 0 0 12px 0;
+    font-size: 36px;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.header p {
+    margin: 0;
+    font-size: 16px;
+    color: #6b7280;
+}
+
+.cardsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+    width: 100%;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    max-width: 320px;
+    height: 100%;
+    border: 2px solid #22c55e;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.15);
+}
+
+.imageContainer {
+    width: 100%;
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatarPlaceholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 64px;
+    font-weight: bold;
+    color: white;
+}
+
+.content {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.name {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.username {
+    margin: 0;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.major {
+    margin: 0;
+    font-size: 14px;
+    color: #22c55e;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.skillsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skillsLabel {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.skillTag {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid #22c55e;
+}
+
+.noSkills {
+    font-size: 12px;
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.bioContainer {
+    flex: 1;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.bio {
+    margin: 0;
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .cardsGrid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
+
+    .header h1 {
+        font-size: 28px;
+    }
+
+    .header p {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 24px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cardsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+
+    .container {
+        padding: 16px 12px;
+        margin-bottom: 20px;
+    }
+}
+
+.loadingSpinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    gap: 20px;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #dcfce7;
+    border-top-color: #22c55e;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingSpinner p {
+    color: #22c55e;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    gap: 20px;
+    color: #6b7280;
+}
+
+.emptyState p {
+    font-size: 18px;
+    margin: 0;
+}
+
+.errorContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    gap: 20px;
+    padding: 24px;
+    background: #fee2e2;
+    border-radius: 12px;
+    border: 2px solid #fecaca;
+}
+
+.errorText {
+    color: #991b1b;
+    font-size: 16px;
+    margin: 0;
+}
+
+.retryButton {
+    background: #22c55e;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.retryButton:hover {
+    background: #16a34a;
+    transform: scale(1.05);
+}
+
+.retryButton:active {
+    transform: scale(0.95);
+}

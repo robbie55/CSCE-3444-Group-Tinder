@@ -3,7 +3,7 @@ from typing import Annotated, Dict, List, Optional
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, EmailStr, Field, HttpUrl
 
-from app.models.enums import Major
+from app.models.enums import Major, MatchRequestStatus
 
 # Helper: MongoDB Atlas uses stringfied object id's, use this for id fields
 PyObjectId = Annotated[str, BeforeValidator(str)]
@@ -46,6 +46,35 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
     skills: Optional[List[str]] = None
     external_links: Optional[Dict[str, HttpUrl]] = None
+
+
+# =======================
+# MATCH REQUEST MODELS
+# =======================
+
+
+class MatchRequestCreate(BaseModel):
+    receiver_id: str
+
+
+class MatchRequestUpdate(BaseModel):
+    status: MatchRequestStatus
+
+
+class MatchRequestRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    sender_id: str
+    receiver_id: str
+    status: MatchRequestStatus
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class MatchRequestWithUser(MatchRequestRead):
+    sender: Optional[UserRead] = None
+    receiver: Optional[UserRead] = None
 
 
 # =======================

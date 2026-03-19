@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.db.connect import lifespan
-from app.routers import auth, users
+from app.routers import auth, users, match
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # ROUTES
 app.include_router(users.router, prefix="/api", tags=["users"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(match.router, prefix="/api", tags=["match"])
 
 
 @app.get("/")
