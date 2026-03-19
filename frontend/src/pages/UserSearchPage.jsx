@@ -35,7 +35,10 @@ export default function UserSearchPage() {
     const filterUsers = useCallback(
         (usersArray) => {
             return (usersArray ?? []).filter((user) => {
-                const matchesSearch = user.full_name.toLowerCase().includes(_search.toLowerCase());
+                const matchesSearch = user.full_name
+                    .trim()
+                    .toLowerCase()
+                    .includes(_search.trim().toLowerCase());
                 const matchesMajor = _major === 'all' || user.major === _major;
                 const matchesSkill = _skills === 'all' || user.skills.includes(_skills);
 
