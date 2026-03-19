@@ -30,42 +30,44 @@ export default function UserSearchCard({ user }) {
             </div>
             <div className='card-info'>
                 <div className='info-header'>
-                    <div className='info-name'>
+                    <div className='info-names'>
                         <h3>{user.full_name}</h3>
+                        <h6>{user.username}</h6>
                     </div>
                 </div>
                 <p className='card-bio'>{user.bio}</p>
                 <div className='card-details'>
                     <div className='skill-row'>
-                        {user.skills.map((skill, idx) => (
-                            <span key={idx} className='skill-badge'>
+                        {user.skills.map((skill) => (
+                            <span key={skill} className='skill-badge'>
                                 {skill}
                             </span>
                         ))}
                     </div>
-                    <div className='detail-row'>
-                        <a
-                            href={user.external_links.github}
-                            className='card_link'
-                            target='_blank'
-                            rel='noreferrer'
-                        >
-                            GitHub
-                        </a>
-                        <a
-                            href={user.external_links.linkedin}
-                            className='card_link'
-                            target='_blank'
-                            rel='noreferrer'
-                        >
-                            LinkedIn
-                        </a>
-                    </div>
-                    <div className='detail-row'>
-                        <a href={`mailto: ${user.username}`} className='card-email'>
-                            {user.username}
-                        </a>
-                    </div>
+                    {user.external_links.github ? (
+                        <div className='detail-row'>
+                            <a
+                                href={user.external_links.github}
+                                className='card-link'
+                                target='_blank'
+                                rel='noreferrer'
+                            >
+                                GitHub
+                            </a>
+                            <a
+                                href={user.external_links.linkedin}
+                                className='card-link'
+                                target='_blank'
+                                rel='noreferrer'
+                            >
+                                LinkedIn
+                            </a>
+                        </div>
+                    ) : (
+                        <div className='detail-row'>
+                            <span className='no-card-link'>No external links</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -77,7 +79,7 @@ UserSearchCard.propTypes = {
     user: PropTypes.shape({
         full_name: PropTypes.string.isRequired,
         username: PropTypes.string.isRequired,
-        bio: PropTypes.arrayOf(PropTypes.string),
+        bio: PropTypes.string,
         skills: PropTypes.arrayOf(PropTypes.string).isRequired,
         external_links: PropTypes.shape({
             github: PropTypes.string.isRequired,

@@ -31,7 +31,7 @@ export default function SearchFilters({
                     <option value='Computer Engineering'>Computer Engineering</option>
                     <option value='Information Technology'>Information Technology</option>
                     <option value='Data Science'>Data Science</option>
-                    <option value='Cybersecurity'>Cyberseciruty</option>
+                    <option value='Cybersecurity'>Cybersecurity</option>
                     <option value='Other'>Other</option>
                 </select>
                 <select

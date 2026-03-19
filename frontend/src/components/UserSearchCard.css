@@ -52,10 +52,15 @@
     gap: 8px;
 }
 
-.info-name h3 {
+.info-names h3 {
+    font-size: 18px;
     font-weight: 600;
     margin: 0 0 4px 0;
-    font-size: 18px;
+}
+
+.info-names h6 {
+    font-size: 10px;
+    color: #4b5563;
 }
 
 .card-bio {
@@ -104,13 +109,14 @@
     text-decoration: underline;
 }
 
-.card_link {
+.card-link,
+.no-card-link {
     font-size: 14px;
     font-weight: 500;
     color: #00853e;
     text-decoration: none;
 }
 
-.card_link:hover {
+.card-link:hover {
     text-decoration: underline;
 }

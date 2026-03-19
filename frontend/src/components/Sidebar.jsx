@@ -1,7 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { clearToken } from '../api/auth';
 import './Sidebar.css';
 
 export default function Sidebar() {
+    const navigate = useNavigate();
+
     return (
         <div className='sidebar'>
             <div className='sidebar-header'>
@@ -22,9 +25,15 @@ export default function Sidebar() {
                 </Link>
             </div>
             <div className='sidebar-logout'>
-                <Link className='sidebar-link' to='/login'>
+                <button
+                    className='logout-button'
+                    onClick={() => {
+                        clearToken();
+                        navigate('/login');
+                    }}
+                >
                     Log out
-                </Link>
+                </button>
             </div>
         </div>
     );
