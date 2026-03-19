@@ -58,14 +58,14 @@
     font-size: 18px;
 }
 
-.bio {
+.card-bio {
     font-size: 14px;
     color: #4b5563;
     margin: 8px 0 12px 0;
     line-height: 1.4;
 }
 
-.details {
+.card-details {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -93,24 +93,24 @@
     background-color: white;
 }
 
-.profile-email {
+.card-email {
     font-size: 14px;
     font-weight: 500;
     color: #00853e;
     text-decoration: none;
 }
 
-.profile-email:hover {
+.card-email:hover {
     text-decoration: underline;
 }
 
-.external_link {
+.card_link {
     font-size: 14px;
     font-weight: 500;
     color: #00853e;
     text-decoration: none;
 }
 
-.external_link:hover {
+.card_link:hover {
     text-decoration: underline;
 }

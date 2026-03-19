@@ -54,8 +54,8 @@ export default function UserSearchPage() {
             <div className='page-sidebar'>
                 <Sidebar />
             </div>
-            <div className='content'>
-                <div className='search-filters'>
+            <div className='page-content'>
+                <div className='page-filters'>
                     <SearchFilters
                         search={_search}
                         onSearchChange={_setSearch}
@@ -73,7 +73,7 @@ export default function UserSearchPage() {
                         ))}
                     </div>
                 ) : (
-                    <div className='empty'>
+                    <div className='page-empty'>
                         <p className='empty-message'>No users found</p>
                     </div>
                 )}

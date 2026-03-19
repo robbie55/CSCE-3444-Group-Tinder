@@ -34,8 +34,8 @@ export default function UserSearchCard({ user }) {
                         <h3>{user.full_name}</h3>
                     </div>
                 </div>
-                <p className='bio'>{user.bio}</p>
-                <div className='details'>
+                <p className='card-bio'>{user.bio}</p>
+                <div className='card-details'>
                     <div className='skill-row'>
                         {user.skills.map((skill, idx) => (
                             <span key={idx} className='skill-badge'>
@@ -46,7 +46,7 @@ export default function UserSearchCard({ user }) {
                     <div className='detail-row'>
                         <a
                             href={user.external_links.github}
-                            className='external_link'
+                            className='card_link'
                             target='_blank'
                             rel='noreferrer'
                         >
@@ -54,7 +54,7 @@ export default function UserSearchCard({ user }) {
                         </a>
                         <a
                             href={user.external_links.linkedin}
-                            className='external_link'
+                            className='card_link'
                             target='_blank'
                             rel='noreferrer'
                         >
@@ -62,7 +62,7 @@ export default function UserSearchCard({ user }) {
                         </a>
                     </div>
                     <div className='detail-row'>
-                        <a href={`mailto: ${user.username}`} className='profile-email'>
+                        <a href={`mailto: ${user.username}`} className='card-email'>
                             {user.username}
                         </a>
                     </div>

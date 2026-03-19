@@ -17,14 +17,14 @@ export default function SearchFilters({
                     placeholder='Search by name'
                     value={search}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    className='input'
+                    className='filters-input'
                 />
             </div>
-            <div className='grid'>
+            <div className='filters-grid'>
                 <select
                     value={major}
                     onChange={(e) => onMajorChange(e.target.value)}
-                    className='select'
+                    className='filters-select'
                 >
                     <option value='all'>All Majors</option>
                     <option value='Computer Science'>Computer Science</option>
@@ -37,7 +37,7 @@ export default function SearchFilters({
                 <select
                     value={skills}
                     onChange={(e) => onSkillsChange(e.target.value)}
-                    className='select'
+                    className='filters-select'
                 >
                     <option value='all'>All Skills</option>
                     <option value='Python'>Python</option>
