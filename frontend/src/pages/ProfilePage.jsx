@@ -47,11 +47,13 @@ export default function ProfilePage() {
     const [draft, setDraft] = useState(null);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState('');
+    const [saveSuccess, setSaveSuccess] = useState('');
 
     const startEditing = useCallback(() => {
         if (!user) return;
 
         setSaveError('');
+        setSaveSuccess('');
         setIsEditing(true);
         setDraft({
             username: user.username ?? '',
@@ -70,6 +72,7 @@ export default function ProfilePage() {
         setIsEditing(false);
         setDraft(null);
         setSaveError('');
+        setSaveSuccess('');
     }, []);
 
     const saveChanges = useCallback(async () => {
@@ -77,6 +80,7 @@ export default function ProfilePage() {
 
         setSaving(true);
         setSaveError('');
+        setSaveSuccess('');
 
         try {
             const patchBody = {};
@@ -128,6 +132,7 @@ export default function ProfilePage() {
             }
             const updated = await updateCurrentUser(patchBody);
             setUser(updated);
+            setSaveSuccess('Profile updated');
             setIsEditing(false);
             setDraft(null);
         } catch (err) {
@@ -149,6 +154,9 @@ export default function ProfilePage() {
             .toUpperCase();
     }, [user]);
 
+    const githubUrl = user?.external_links?.github ?? '';
+    const linkedinUrl = user?.external_links?.linkedin ?? '';
+    const hasExternalLinks = Boolean(githubUrl || linkedinUrl);
     // Loading mode
     if (loading) {
         return (
@@ -292,7 +300,7 @@ export default function ProfilePage() {
 
                         {!isEditing ? (
                             <p className='profile-placeholder-text'>
-                                {user?.bio ? user.bio : 'No bio yet.'}
+                                {user?.bio ? user.bio : 'No bio provided.'}
                             </p>
                         ) : (
                             <div className='profile-field'>
@@ -324,7 +332,9 @@ export default function ProfilePage() {
                                         </span>
                                     ))
                                 ) : (
-                                    <span className='profile-placeholder-text'>No skills yet.</span>
+                                    <span className='profile-placeholder-text'>
+                                        No skills found.
+                                    </span>
                                 )}
                             </div>
                         ) : (
@@ -356,41 +366,48 @@ export default function ProfilePage() {
 
                         {!isEditing ? (
                             <div className='profile-links'>
-                                <div className='profile-link-row'>
-                                    <span className='profile-link-label'>GitHub</span>
-                                    {user?.external_links?.github ? (
-                                        <a
-                                            className='profile-link-placeholder'
-                                            href={user.external_links.github}
-                                            target='_blank'
-                                            rel='noreferrer'
-                                        >
-                                            Connected
-                                        </a>
-                                    ) : (
-                                        <span className='profile-link-placeholder'>
-                                            Not connected
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className='profile-link-row'>
-                                    <span className='profile-link-label'>LinkedIn</span>
-                                    {user?.external_links?.linkedin ? (
-                                        <a
-                                            className='profile-link-placeholder'
-                                            href={user.external_links.linkedin}
-                                            target='_blank'
-                                            rel='noreferrer'
-                                        >
-                                            Connected
-                                        </a>
-                                    ) : (
-                                        <span className='profile-link-placeholder'>
-                                            Not connected
-                                        </span>
-                                    )}
-                                </div>
+                                {!hasExternalLinks ? (
+                                    <span className='profile-link-placeholder'>
+                                        No external links
+                                    </span>
+                                ) : (
+                                    <>
+                                        <div className='profile-link-row'>
+                                            <span className='profile-link-label'>GitHub</span>
+                                            {githubUrl ? (
+                                                <a
+                                                    className='profile-link-placeholder'
+                                                    href={githubUrl}
+                                                    target='_blank'
+                                                    rel='noreferrer'
+                                                >
+                                                    Connected
+                                                </a>
+                                            ) : (
+                                                <span className='profile-link-placeholder'>
+                                                    Not connected
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className='profile-link-row'>
+                                            <span className='profile-link-label'>LinkedIn</span>
+                                            {linkedinUrl ? (
+                                                <a
+                                                    className='profile-link-placeholder'
+                                                    href={linkedinUrl}
+                                                    target='_blank'
+                                                    rel='noreferrer'
+                                                >
+                                                    Connected
+                                                </a>
+                                            ) : (
+                                                <span className='profile-link-placeholder'>
+                                                    Not connected
+                                                </span>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         ) : (
                             <div className='profile-form-grid'>
@@ -477,8 +494,14 @@ export default function ProfilePage() {
                         )}
                     </div>
 
+                    {saveSuccess ? (
+                        <div className='profile-success' role='status' aria-live='polite'>
+                            {saveSuccess}
+                        </div>
+                    ) : null}
+
                     {isEditing && saveError ? (
-                        <div className='profile-placeholder-text' style={{ marginTop: 8 }}>
+                        <div className='profile-error-banner' role='alert' aria-live='assertive'>
                             {saveError}
                         </div>
                     ) : null}
