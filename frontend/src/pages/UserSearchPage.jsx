@@ -73,6 +73,7 @@ export default function UserSearchPage() {
                     <div className='users'>
                         {_filteredUsers.map((user) => (
                             <UserSearchCard key={user.id} user={user} />
+                            <UserSearchCard key={user._id} user={user} />
                         ))}
                     </div>
                 ) : (
