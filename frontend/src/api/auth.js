@@ -1,7 +1,21 @@
 const BASE_URL = 'http://localhost:8000';
 
 export function getToken() {
-    return localStorage.getItem('access_token');
+    const token = localStorage.getItem('access_token');
+    if (!token) return null;
+
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+            clearToken();
+            return null;
+        }
+    } catch {
+        clearToken();
+        return null;
+    }
+
+    return token;
 }
 
 export function clearToken() {

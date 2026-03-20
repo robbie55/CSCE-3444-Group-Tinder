@@ -1,0 +1,54 @@
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    background-color: #00853e;
+    height: 100vh;
+    width: 100%;
+    padding-left: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sidebar-header {
+    display: block;
+    padding: 10px 0px;
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    text-decoration: none;
+}
+
+.sidebar-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-logout {
+    margin: auto 0px 16px 0px;
+}
+
+.logout-button {
+    display: block;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    color: white;
+    background-color: #00853e;
+    border: none;
+}
+
+.logout-button:hover {
+    color: #9ca3af;
+}
+
+.sidebar-link {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    color: white;
+    text-decoration: none;
+}
+
+.sidebar-link:hover {
+    color: #9ca3af;
+}
