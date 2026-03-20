@@ -240,3 +240,52 @@
     text-align: center;
     margin-top: 8px;
 }
+
+.page {
+    overflow-x: hidden;
+}
+
+@media (max-width: 767px) {
+    .page-sidebar {
+        width: 120px;
+    }
+
+    .page-content {
+        margin-left: 120px;
+        padding: 24px 12px;
+    }
+
+    .profile-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .profile-action-button {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .profile-header-info {
+        gap: 4px;
+    }
+
+    .profile-name {
+        font-size: 20px;
+    }
+}
+
+@media (min-width: 768px) {
+    .profile-section {
+        padding: 20px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .profile {
+        gap: 28px;
+    }
+
+    .profile-actions {
+        gap: 14px;
+    }
+}
