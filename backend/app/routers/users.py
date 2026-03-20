@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 # list all users, returns list of all users
-@router.get("/users", response_model=list[UserRead])
+@router.get("/", response_model=list[UserRead])
 def list_users(db=Depends(get_db), current_user=Depends(get_current_user)):
     # db is the Mongo Database object
     allUsers = db["users"].find({})
@@ -25,13 +25,13 @@ def list_users(db=Depends(get_db), current_user=Depends(get_current_user)):
 
 
 # current user
-@router.get("/users/me", response_model=UserRead)
+@router.get("/me", response_model=UserRead)
 def get_me(current_user=Depends(get_current_user)):
     return UserRead(**current_user)
 
 
 # update current user
-@router.patch("/users/me", response_model=UserRead)
+@router.patch("/me", response_model=UserRead)
 def update_me(
     user_update: UserUpdate, current_user=Depends(get_current_user), db=Depends(get_db)
 ):
@@ -56,7 +56,7 @@ def update_me(
 
 # delete current user
 # frontend will have to clear token and redirect to login/register page
-@router.delete("/users/me", status_code=status.HTTP_200_OK)
+@router.delete("/me", status_code=status.HTTP_200_OK)
 def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
     db["users"].delete_one({"_id": ObjectId(current_user["_id"])})
     return {"detail": "User deleted"}
@@ -79,7 +79,7 @@ def suggest_users(
 
 
 # get one user by id , returns UserRead model
-@router.get("/users/{user_id}", response_model=UserRead)
+@router.get("/{user_id}", response_model=UserRead)
 def get_user_by_id(
     user_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
 ):
