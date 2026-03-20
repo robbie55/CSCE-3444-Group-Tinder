@@ -2,11 +2,13 @@ import { PropTypes } from 'prop-types';
 import './UserSearchCard.css';
 
 export default function UserSearchCard({ user }) {
-    const initials = user.full_name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase();
+    const initials =
+        (user?.full_name ?? '')
+            .split(' ')
+            .map((n) => n[0])
+            .filter(Boolean)
+            .join('')
+            .toUpperCase() || 'U';
 
     return (
         <div className='profile-card'>
