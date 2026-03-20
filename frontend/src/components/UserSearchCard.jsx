@@ -1,8 +1,6 @@
 import { PropTypes } from 'prop-types';
 import './UserSearchCard.css';
 
-// basic card template
-// has student name and email
 export default function UserSearchCard({ user }) {
     const initials = user.full_name
         .split(' ')
@@ -44,24 +42,28 @@ export default function UserSearchCard({ user }) {
                             </span>
                         ))}
                     </div>
-                    {user.external_links.github ? (
+                    {user.external_links?.github || user.external_links?.linkedin ? (
                         <div className='detail-row'>
-                            <a
-                                href={user.external_links.github}
-                                className='card-link'
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                GitHub
-                            </a>
-                            <a
-                                href={user.external_links.linkedin}
-                                className='card-link'
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                LinkedIn
-                            </a>
+                            {user.external_links?.github && (
+                                <a
+                                    href={user.external_links.github}
+                                    className='card-link'
+                                    target='_blank'
+                                    rel='noreferrer'
+                                >
+                                    GitHub
+                                </a>
+                            )}
+                            {user.external_links?.linkedin && (
+                                <a
+                                    href={user.external_links.linkedin}
+                                    className='card-link'
+                                    target='_blank'
+                                    rel='noreferrer'
+                                >
+                                    LinkedIn
+                                </a>
+                            )}
                         </div>
                     ) : (
                         <div className='detail-row'>
