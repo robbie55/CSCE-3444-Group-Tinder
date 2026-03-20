@@ -20,8 +20,31 @@ export async function updateCurrentUser(partialUpdate) {
 
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to update profile');
-    }
 
+        const detail = err.detail;
+        let message = 'Failed to update profile';
+
+        if (typeof detail === 'string') {
+            message = detail;
+        } else if (Array.isArray(detail)) {
+            message = detail
+                .map((item) => {
+                    const loc = Array.isArray(item?.loc) ? item.loc : [];
+                    const rawField = loc.length ? loc[loc.length - 1] : 'field';
+                    const prettyField =
+                        rawField === 'github'
+                            ? 'GitHub URL'
+                            : rawField === 'linkedin'
+                              ? 'LinkedIn URL'
+                              : rawField;
+                    const msg = item?.msg || 'Invalid value';
+                    return `${prettyField}: ${msg}`;
+                })
+                .join('; ');
+        } else if (typeof err.message === 'string') {
+            message = err.message;
+        }
+        throw new Error(message);
+    }
     return res.json();
 }
