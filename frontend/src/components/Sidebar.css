@@ -37,10 +37,6 @@
     border: none;
 }
 
-.logout-button:hover {
-    color: #9ca3af;
-}
-
 .sidebar-link {
     display: block;
     font-size: 16px;
@@ -49,6 +45,7 @@
     text-decoration: none;
 }
 
-.sidebar-link:hover {
+.sidebar-link:hover,
+.logout-button:hover {
     color: #9ca3af;
 }

@@ -6,6 +6,8 @@
         0 1px 3px 0 rgba(0, 0, 0, 0.1),
         0 1px 2px 0 rgba(0, 0, 0, 0.06);
     transition: box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .profile-card:hover {
@@ -42,6 +44,8 @@
 .card-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .info-header {
@@ -68,12 +72,16 @@
     color: #4b5563;
     margin: 8px 0 12px 0;
     line-height: 1.4;
+    min-height: 39.1875px;
+    max-height: 39.1875px;
+    overflow: auto;
 }
 
 .card-details {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    height: 100%;
 }
 
 .detail-row {
@@ -98,6 +106,12 @@
     background-color: white;
 }
 
+.no-skills {
+    font-size: 12px;
+    font-size: 14px;
+    color: #4b5563;
+}
+
 .card-email {
     font-size: 14px;
     font-weight: 500;
@@ -107,6 +121,13 @@
 
 .card-email:hover {
     text-decoration: underline;
+}
+
+.links-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: auto;
 }
 
 .card-link,
