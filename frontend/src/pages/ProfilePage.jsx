@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { getCurrentUser } from '../api/users';
+import { getCurrentUser, updateCurrentUser } from '../api/users';
 import Sidebar from '../components/Sidebar.jsx';
 import './ProfilePage.css';
 import './UserSearchPage.css';
-
 const MAJORS = [
     'Computer Science',
     'Computer Engineering',
@@ -80,6 +79,7 @@ export default function ProfilePage() {
         setSaveError('');
 
         try {
+            const patchBody = {};
             const nextUsername = draft.username.trim();
             const nextFullName = draft.full_name.trim();
 
@@ -126,7 +126,7 @@ export default function ProfilePage() {
             ) {
                 patchBody.external_links = nextExternalLinks;
             }
-
+            const updated = await updateCurrentUser(patchBody);
             setUser(updated);
             setIsEditing(false);
             setDraft(null);

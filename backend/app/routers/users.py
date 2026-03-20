@@ -34,7 +34,7 @@ def get_me(current_user=Depends(get_current_user)):
 def update_me(
     user_update: UserUpdate, current_user=Depends(get_current_user), db=Depends(get_db)
 ):
-    update_data = user_update.model_dump(exclude_unset=True)
+    update_data = user_update.model_dump(exclude_unset=True, mode="json")
     if not update_data:
         return UserRead(**current_user)
 
