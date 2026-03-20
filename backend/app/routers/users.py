@@ -1,5 +1,5 @@
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.matching import get_suggestions
 from app.db.connect import get_db
@@ -67,12 +67,14 @@ def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
 
 
 # suggest compatible users based on skills + major
-@router.get("/users/suggestions", response_model=list[SuggestionRead])
+@router.get("/suggestions", response_model=list[SuggestionRead])
 def suggest_users(
-    limit: int = 10,
+    limit: int = Query(default=10, le=50),
     db=Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    # NOTE: loads all users into memory — fine for a university-scale app,
+    # but will need server-side filtering if the user base grows significantly.
     candidates = []
     for doc in db["users"].find({"_id": {"$ne": ObjectId(current_user["_id"])}}):
         doc["_id"] = str(doc["_id"])
