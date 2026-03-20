@@ -109,7 +109,15 @@ export default function ProfilePage() {
             const nextSkills = parseSkills(draft.skillsText);
             const userSkills = (user.skills ?? []).map((s) => s.trim()).filter(Boolean);
 
-            if (nextSkills.join('|') !== userSkills.join('|')) {
+            const normalizeSkills = (skills) =>
+                skills
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                    .sort((a, b) => a.localeCompare(b));
+
+            const normalizedNext = normalizeSkills(nextSkills);
+            const normalizedUser = normalizeSkills(userSkills);
+            if (normalizedNext.join('|') !== normalizedUser.join('|')) {
                 patchBody.skills = nextSkills;
             }
 
