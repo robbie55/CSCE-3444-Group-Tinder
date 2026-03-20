@@ -39,6 +39,10 @@ def update_me(
     if not update_data:
         return UserRead(**current_user)
 
+    # sanitize skills field
+    if "skills" in update_data and update_data["skills"] is None:
+        update_data["skills"] = []
+
     db["users"].update_one(
         {"_id": ObjectId(current_user["_id"])}, {"$set": update_data}
     )
