@@ -1,8 +1,9 @@
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.matching import get_suggestions
 from app.db.connect import get_db
-from app.models.schemas import UserRead, UserUpdate
+from app.models.schemas import SuggestionRead, UserRead, UserUpdate
 from app.routers.auth import get_current_user
 
 router = APIRouter()
@@ -38,6 +39,10 @@ def update_me(
     if not update_data:
         return UserRead(**current_user)
 
+    # sanitize skills field
+    if "skills" in update_data and update_data["skills"] is None:
+        update_data["skills"] = []
+
     db["users"].update_one(
         {"_id": ObjectId(current_user["_id"])}, {"$set": update_data}
     )
@@ -59,6 +64,24 @@ def update_me(
 def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
     db["users"].delete_one({"_id": ObjectId(current_user["_id"])})
     return {"detail": "User deleted"}
+
+
+# suggest compatible users based on skills + major
+@router.get("/suggestions", response_model=list[SuggestionRead])
+def suggest_users(
+    limit: int = Query(default=10, le=50),
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    # NOTE: loads all users into memory — fine for a university-scale app,
+    # but will need server-side filtering if the user base grows significantly.
+    candidates = []
+    for doc in db["users"].find({"_id": {"$ne": ObjectId(current_user["_id"])}}):
+        doc["_id"] = str(doc["_id"])
+        candidates.append(doc)
+
+    ranked = get_suggestions(current_user, candidates, limit=limit)
+    return [SuggestionRead(**user, match_score=score) for user, score in ranked]
 
 
 # get one user by id , returns UserRead model
