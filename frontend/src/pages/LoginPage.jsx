@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../api/auth';
 import styles from './Auth.module.css';
 
@@ -8,6 +8,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -16,7 +17,7 @@ export default function LoginPage() {
 
         try {
             await login(email, password);
-            // TODO: redirect to dashboard after login
+            navigate('/search', { replace: true });
         } catch (err) {
             setError(err.message);
         } finally {
