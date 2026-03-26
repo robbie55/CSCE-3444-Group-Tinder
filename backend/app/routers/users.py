@@ -1,8 +1,9 @@
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from app.core.matching import get_suggestions
 from app.db.connect import get_db
-from app.models.schemas import UserRead, UserUpdate
+from app.models.schemas import SuggestionRead, UserRead, UserUpdate
 from app.routers.auth import get_current_user
 
 router = APIRouter()
@@ -12,7 +13,7 @@ router = APIRouter()
 
 
 # list all users, returns list of all users
-@router.get("/users", response_model=list[UserRead])
+@router.get("/", response_model=list[UserRead])
 def list_users(db=Depends(get_db), current_user=Depends(get_current_user)):
     # db is the Mongo Database object
     allUsers = db["users"].find({})
@@ -24,19 +25,23 @@ def list_users(db=Depends(get_db), current_user=Depends(get_current_user)):
 
 
 # current user
-@router.get("/users/me", response_model=UserRead)
+@router.get("/me", response_model=UserRead)
 def get_me(current_user=Depends(get_current_user)):
     return UserRead(**current_user)
 
 
 # update current user
-@router.patch("/users/me", response_model=UserRead)
+@router.patch("/me", response_model=UserRead)
 def update_me(
     user_update: UserUpdate, current_user=Depends(get_current_user), db=Depends(get_db)
 ):
-    update_data = user_update.model_dump(exclude_unset=True)
+    update_data = user_update.model_dump(exclude_unset=True, mode="json")
     if not update_data:
         return UserRead(**current_user)
+
+    # sanitize skills field
+    if "skills" in update_data and update_data["skills"] is None:
+        update_data["skills"] = []
 
     db["users"].update_one(
         {"_id": ObjectId(current_user["_id"])}, {"$set": update_data}
@@ -55,14 +60,32 @@ def update_me(
 
 # delete current user
 # frontend will have to clear token and redirect to login/register page
-@router.delete("/users/me", status_code=status.HTTP_200_OK)
+@router.delete("/me", status_code=status.HTTP_200_OK)
 def delete_me(current_user=Depends(get_current_user), db=Depends(get_db)):
     db["users"].delete_one({"_id": ObjectId(current_user["_id"])})
     return {"detail": "User deleted"}
 
 
+# suggest compatible users based on skills + major
+@router.get("/suggestions", response_model=list[SuggestionRead])
+def suggest_users(
+    limit: int = Query(default=10, le=50),
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    # NOTE: loads all users into memory — fine for a university-scale app,
+    # but will need server-side filtering if the user base grows significantly.
+    candidates = []
+    for doc in db["users"].find({"_id": {"$ne": ObjectId(current_user["_id"])}}):
+        doc["_id"] = str(doc["_id"])
+        candidates.append(doc)
+
+    ranked = get_suggestions(current_user, candidates, limit=limit)
+    return [SuggestionRead(**user, match_score=score) for user, score in ranked]
+
+
 # get one user by id , returns UserRead model
-@router.get("/users/{user_id}", response_model=UserRead)
+@router.get("/{user_id}", response_model=UserRead)
 def get_user_by_id(
     user_id: str, db=Depends(get_db), current_user=Depends(get_current_user)
 ):
