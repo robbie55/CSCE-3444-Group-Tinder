@@ -1,16 +1,15 @@
 from datetime import datetime
+
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.db.connect import get_db
+from app.models.enums import MatchRequestStatus
 from app.models.schemas import (
-    MatchRequestCreate,
     MatchRequestRead,
-    MatchRequestUpdate,
     MatchRequestWithUser,
     UserRead,
 )
-from app.models.enums import MatchRequestStatus
 from app.routers.auth import get_current_user
 
 router = APIRouter()
