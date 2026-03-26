@@ -14,3 +14,9 @@ class SkillLevel(str, Enum):
     BEGINNER = "Beginner"
     INTERMEDIATE = "Intermediate"
     EXPERT = "Expert"
+
+
+class MatchRequestStatus(str, Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
