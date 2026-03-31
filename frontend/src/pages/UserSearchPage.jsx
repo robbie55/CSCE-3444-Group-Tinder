@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../api/auth';
+import { getCurrentUser } from '../api/users.js';
 import SearchFilters from '../components/SearchFilters.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import UserSearchCard from '../components/UserSearchCard.jsx';
@@ -12,6 +13,7 @@ export default function UserSearchPage() {
     const [_major, _setMajor] = useState('all');
     const [_skills, _setSkills] = useState('all');
     const [_users, _setUsers] = useState([]);
+    const [_currentUserId, _setCurrentUseId] = useState(null);
 
     useEffect(() => {
         async function fetchUsers() {
@@ -29,12 +31,25 @@ export default function UserSearchPage() {
                 console.error('Failed to fetch users: ', err.message);
             }
         }
+
+        async function fetchCurrentUserId() {
+            try {
+                const currentUserRes = await getCurrentUser();
+                _setCurrentUseId(currentUserRes._id);
+            } catch (err) {
+                console.error('Failed to fetch current user: ', err.message);
+            }
+        }
+
         fetchUsers();
+        fetchCurrentUserId();
     }, []);
 
     const filterUsers = useCallback(
         (usersArray) => {
             return (usersArray ?? []).filter((user) => {
+                if (_currentUserId && _currentUserId === user._id) return false;
+
                 const matchesSearch = user.full_name
                     .trim()
                     .toLowerCase()
@@ -45,7 +60,7 @@ export default function UserSearchPage() {
                 return matchesSearch && matchesMajor && matchesSkill;
             });
         },
-        [_search, _major, _skills]
+        [_search, _major, _skills, _currentUserId]
     );
 
     const _filteredUsers = useMemo(() => {
