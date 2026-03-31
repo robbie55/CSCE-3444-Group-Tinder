@@ -1,14 +1,14 @@
 import { PropTypes } from 'prop-types';
 import './UserSearchCard.css';
 
-// basic card template
-// has student name and email
 export default function UserSearchCard({ user }) {
-    const initials = user.full_name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase();
+    const initials =
+        (user?.full_name ?? '')
+            .split(' ')
+            .map((n) => n[0])
+            .filter(Boolean)
+            .join('')
+            .toUpperCase() || 'U';
 
     return (
         <div className='profile-card'>
@@ -21,6 +21,7 @@ export default function UserSearchCard({ user }) {
                             className='avatar-image'
                             onError={(e) => {
                                 e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement.innerHTML = `<div>${initials}</div>`;
                             }}
                         ></img>
                     ) : (
@@ -35,33 +36,45 @@ export default function UserSearchCard({ user }) {
                         <h6>{user.username}</h6>
                     </div>
                 </div>
-                <p className='card-bio'>{user.bio}</p>
+                {user.bio ? (
+                    <p className='card-bio'>{user.bio}</p>
+                ) : (
+                    <p className='card-bio'>No user bio provided.</p>
+                )}
                 <div className='card-details'>
                     <div className='skill-row'>
-                        {user.skills.map((skill) => (
-                            <span key={skill} className='skill-badge'>
-                                {skill}
-                            </span>
-                        ))}
+                        {(user.skills ?? []).length > 0 ? (
+                            user.skills.map((skill) => (
+                                <span key={skill} className='skill-badge'>
+                                    {skill}
+                                </span>
+                            ))
+                        ) : (
+                            <span className='no-skills'>No skills listed</span>
+                        )}
                     </div>
-                    {user.external_links.github ? (
-                        <div className='detail-row'>
-                            <a
-                                href={user.external_links.github}
-                                className='card-link'
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                GitHub
-                            </a>
-                            <a
-                                href={user.external_links.linkedin}
-                                className='card-link'
-                                target='_blank'
-                                rel='noreferrer'
-                            >
-                                LinkedIn
-                            </a>
+                    {user.external_links?.github || user.external_links?.linkedin ? (
+                        <div className='links-row'>
+                            {user.external_links?.github && (
+                                <a
+                                    href={user.external_links.github}
+                                    className='card-link'
+                                    target='_blank'
+                                    rel='noreferrer'
+                                >
+                                    GitHub
+                                </a>
+                            )}
+                            {user.external_links?.linkedin && (
+                                <a
+                                    href={user.external_links.linkedin}
+                                    className='card-link'
+                                    target='_blank'
+                                    rel='noreferrer'
+                                >
+                                    LinkedIn
+                                </a>
+                            )}
                         </div>
                     ) : (
                         <div className='detail-row'>
@@ -82,8 +95,8 @@ UserSearchCard.propTypes = {
         bio: PropTypes.string,
         skills: PropTypes.arrayOf(PropTypes.string).isRequired,
         external_links: PropTypes.shape({
-            github: PropTypes.string.isRequired,
-            linkedin: PropTypes.string.isRequired,
+            github: PropTypes.string,
+            linkedin: PropTypes.string,
         }).isRequired,
         avatar_url: PropTypes.string,
     }).isRequired,
