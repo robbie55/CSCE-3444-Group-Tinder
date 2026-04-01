@@ -1,9 +1,13 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clearToken } from '../api/auth';
 import './Sidebar.css';
 
 export default function Sidebar() {
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const linkClass = (to) =>
+        `sidebar-link${location.pathname === to ? ' sidebar-link--active' : ''}`;
 
     return (
         <div className='sidebar'>
@@ -11,16 +15,16 @@ export default function Sidebar() {
                 <span>UNT</span>
             </div>
             <div className='sidebar-options'>
-                <Link className='sidebar-link' to='/dashboard'>
+                <Link className={linkClass('/dashboard')} to='/dashboard'>
                     Dashboard
                 </Link>
-                <Link className='sidebar-link' to='/profile'>
+                <Link className={linkClass('/profile')} to='/profile'>
                     Profile
                 </Link>
-                <Link className='sidebar-link' to='/groups'>
+                <Link className={linkClass('/groups')} to='/groups'>
                     Groups
                 </Link>
-                <Link className='sidebar-link' to='/search'>
+                <Link className={linkClass('/search')} to='/search'>
                     Search
                 </Link>
             </div>

@@ -15,6 +15,7 @@ export default function SearchFilters({
                 <input
                     type='text'
                     placeholder='Search by name'
+                    aria-label='Search users by name'
                     value={search}
                     onChange={(e) => onSearchChange(e.target.value)}
                     className='filters-input'
@@ -25,6 +26,7 @@ export default function SearchFilters({
                     value={major}
                     onChange={(e) => onMajorChange(e.target.value)}
                     className='filters-select'
+                    aria-label='Filter by major'
                 >
                     <option value='all'>All Majors</option>
                     <option value='Computer Science'>Computer Science</option>
@@ -38,6 +40,7 @@ export default function SearchFilters({
                     value={skills}
                     onChange={(e) => onSkillsChange(e.target.value)}
                     className='filters-select'
+                    aria-label='Filter by skills'
                 >
                     <option value='all'>All Skills</option>
                     <option value='Python'>Python</option>
