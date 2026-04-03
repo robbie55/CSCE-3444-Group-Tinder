@@ -37,12 +37,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-# Final  router path will be "/api/users"
+# Final user router path is "/api/users"
 # grouping users endpoints in one
 
 
 # ROUTES
-app.include_router(users.router, prefix="/api", tags=["users"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(match.router, prefix="/api", tags=["match"])
 
