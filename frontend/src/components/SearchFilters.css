@@ -1,7 +1,7 @@
 .filters {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .input-container {
@@ -10,29 +10,33 @@
 
 .filters-input {
     width: 100%;
-    padding: 10px 0px 10px 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 10px var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     outline: none;
     transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
-.filters-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.filters-input:hover {
+    border-color: var(--color-text-muted);
+}
+
+.filters-input:focus-visible {
+    border-color: var(--color-focus);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .filters-input::placeholder {
-    color: #9ca3af;
+    color: var(--color-text-muted);
 }
 
 .filters-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 @media (min-width: 640px) {
@@ -49,24 +53,28 @@
 
 .filters-select {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-    background-color: white;
+    padding: 10px var(--space-3);
+    padding-right: var(--space-10);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    background-color: var(--color-surface);
     cursor: pointer;
     outline: none;
     transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-    padding-right: 40px;
+        border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
 }
 
-.filters-select:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.filters-select:hover {
+    border-color: var(--color-text-muted);
+}
+
+.filters-select:focus-visible {
+    border-color: var(--color-focus);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .filters-select option {
-    padding: 8px;
+    padding: var(--space-2);
 }
