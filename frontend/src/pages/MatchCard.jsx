@@ -80,21 +80,21 @@ export default function MatchCard({ user, onConnect, requestStatus = null }) {
                     isSelf
                         ? 'This is your profile'
                         : isPending
-                        ? 'Request pending'
-                        : isConnected
-                          ? 'Already connected'
-                          : 'Send connect request'
+                          ? 'Request pending'
+                          : isConnected
+                            ? 'Already connected'
+                            : 'Send connect request'
                 }
             >
                 {isLoading
                     ? 'Sending...'
-                                        : isSelf
-                                            ? 'You'
-                    : isPending
-                      ? 'Request Sent'
-                      : isConnected
-                        ? 'Connected'
-                        : 'Connect'}
+                    : isSelf
+                      ? 'You'
+                      : isPending
+                        ? 'Request Sent'
+                        : isConnected
+                          ? 'Connected'
+                          : 'Connect'}
             </button>
         </div>
     );
