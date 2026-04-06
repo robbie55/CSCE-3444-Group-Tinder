@@ -15,6 +15,13 @@ from app.routers.auth import get_current_user
 router = APIRouter()
 
 
+def _serialize_match_request_doc(req: dict) -> dict:
+    req["_id"] = str(req["_id"])
+    req["sender_id"] = str(req["sender_id"])
+    req["receiver_id"] = str(req["receiver_id"])
+    return req
+
+
 # Send a match request to another user
 @router.post("/match/request/{receiver_id}", response_model=MatchRequestRead)
 def send_match_request(
@@ -40,7 +47,7 @@ def send_match_request(
         )
 
     # Check if user is trying to connect with themselves
-    if current_user["_id"] == receiver_oid:
+    if ObjectId(current_user["_id"]) == receiver_oid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot send match request to yourself.",
@@ -81,6 +88,7 @@ def send_match_request(
 
     result = db["match_requests"].insert_one(match_request)
     match_request["_id"] = result.inserted_id
+    match_request = _serialize_match_request_doc(match_request)
 
     return MatchRequestRead(**match_request)
 
@@ -100,11 +108,11 @@ def get_incoming_requests(
 
     requests_list = []
     for req in incoming:
-        req["_id"] = str(req["_id"])
+        req = _serialize_match_request_doc(req)
         sender_id = req["sender_id"]
 
         # Get sender user info
-        sender = db["users"].find_one({"_id": sender_id})
+        sender = db["users"].find_one({"_id": ObjectId(sender_id)})
         if sender:
             sender["_id"] = str(sender["_id"])
             sender_obj = UserRead(**sender)
@@ -135,11 +143,11 @@ def get_outgoing_requests(
 
     requests_list = []
     for req in outgoing:
-        req["_id"] = str(req["_id"])
+        req = _serialize_match_request_doc(req)
         receiver_id = req["receiver_id"]
 
         # Get receiver user info
-        receiver = db["users"].find_one({"_id": receiver_id})
+        receiver = db["users"].find_one({"_id": ObjectId(receiver_id)})
         if receiver:
             receiver["_id"] = str(receiver["_id"])
             receiver_obj = UserRead(**receiver)
@@ -204,7 +212,7 @@ def accept_match_request(
     )
 
     updated_request = db["match_requests"].find_one({"_id": request_oid})
-    updated_request["_id"] = str(updated_request["_id"])
+    updated_request = _serialize_match_request_doc(updated_request)
 
     return MatchRequestRead(**updated_request)
 
@@ -258,7 +266,7 @@ def reject_match_request(
     )
 
     updated_request = db["match_requests"].find_one({"_id": request_oid})
-    updated_request["_id"] = str(updated_request["_id"])
+    updated_request = _serialize_match_request_doc(updated_request)
 
     return MatchRequestRead(**updated_request)
 
