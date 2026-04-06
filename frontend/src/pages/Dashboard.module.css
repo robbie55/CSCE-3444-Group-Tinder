@@ -1,3 +1,21 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+}
+
+.pageSidebar {
+    position: fixed;
+    width: 150px;
+    height: 100vh;
+}
+
+.pageContent {
+    flex: 1;
+    width: 100%;
+    margin-left: 150px;
+}
+
 .container {
     width: 100%;
     max-width: 1400px;
@@ -60,6 +78,32 @@
     transform: scale(1.05);
 }
 
+.debugPanel {
+    margin-bottom: 24px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.debugPanel summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: #334155;
+}
+
+.debugPanel pre {
+    margin: 12px 0 0 0;
+    max-height: 280px;
+    overflow: auto;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #0f172a;
+    background: #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+}
+
 .cardsGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -68,6 +112,14 @@
 }
 
 @media (max-width: 768px) {
+    .pageSidebar {
+        width: 120px;
+    }
+
+    .pageContent {
+        margin-left: 120px;
+    }
+
     .cardsGrid {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 24px;
@@ -87,6 +139,20 @@
 }
 
 @media (max-width: 480px) {
+    .page {
+        flex-direction: column;
+    }
+
+    .pageSidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+
+    .pageContent {
+        margin-left: 0;
+    }
+
     .cardsGrid {
         grid-template-columns: 1fr;
     }

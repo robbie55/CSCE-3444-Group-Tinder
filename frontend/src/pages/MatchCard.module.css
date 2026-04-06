@@ -68,6 +68,13 @@
     letter-spacing: 0.5px;
 }
 
+.matchScore {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: #15803d;
+}
+
 .skillsContainer {
     display: flex;
     flex-direction: column;

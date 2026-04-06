@@ -5,24 +5,31 @@ import styles from './MatchCard.module.css';
 
 export default function MatchCard({ user, onConnect, requestStatus = null }) {
     const [isLoading, setIsLoading] = useState(false);
+    const userId = user.id || user._id;
 
     const handleConnect = async () => {
+        if (!userId) {
+            alert('Cannot send request: missing user id');
+            return;
+        }
+
         try {
             setIsLoading(true);
-            await sendMatchRequest(user.id);
-            onConnect(user.id);
+            await sendMatchRequest(userId);
+            onConnect(userId);
         } catch (error) {
             console.error('Error connecting with user:', error);
-            alert('Failed to send connect request');
+            alert(error?.message || 'Failed to send connect request');
         } finally {
             setIsLoading(false);
         }
     };
 
     // Determine button state
+    const isSelf = requestStatus === 'self';
     const isConnected = requestStatus === 'connected';
     const isPending = requestStatus === 'pending';
-    const isDisabled = isConnected || isPending || isLoading;
+    const isDisabled = isSelf || isConnected || isPending || isLoading;
 
     return (
         <div className={styles.card}>
@@ -39,6 +46,9 @@ export default function MatchCard({ user, onConnect, requestStatus = null }) {
             <div className={styles.content}>
                 <h2 className={styles.name}>{user.full_name}</h2>
                 <p className={styles.major}>{user.major}</p>
+                {typeof user.match_score === 'number' && (
+                    <p className={styles.matchScore}>{Math.round(user.match_score * 100)}% match</p>
+                )}
 
                 <div className={styles.skillsContainer}>
                     <p className={styles.skillsLabel}>Languages & Skills:</p>
@@ -67,7 +77,9 @@ export default function MatchCard({ user, onConnect, requestStatus = null }) {
                 onClick={handleConnect}
                 disabled={isDisabled}
                 title={
-                    isPending
+                    isSelf
+                        ? 'This is your profile'
+                        : isPending
                         ? 'Request pending'
                         : isConnected
                           ? 'Already connected'
@@ -76,6 +88,8 @@ export default function MatchCard({ user, onConnect, requestStatus = null }) {
             >
                 {isLoading
                     ? 'Sending...'
+                                        : isSelf
+                                            ? 'You'
                     : isPending
                       ? 'Request Sent'
                       : isConnected
@@ -89,9 +103,11 @@ export default function MatchCard({ user, onConnect, requestStatus = null }) {
 MatchCard.propTypes = {
     user: PropTypes.shape({
         id: PropTypes.string,
+        _id: PropTypes.string,
         avatar_url: PropTypes.string,
         full_name: PropTypes.string,
         major: PropTypes.string,
+        match_score: PropTypes.number,
         skills: PropTypes.arrayOf(PropTypes.string),
         bio: PropTypes.string,
     }),
