@@ -1,5 +1,4 @@
 import logging
-from pyexpat.errors import messages
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -7,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.db.connect import lifespan
-from app.routers import auth, groups, users
+from app.routers import auth, groups, messages, users
 
 logger = logging.getLogger(__name__)
 

@@ -23,6 +23,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Stable WebSocket error codes (UI contract)
+ERR_INVALID_JSON = "invalid_json"
+ERR_INVALID_ENVELOPE = "invalid_envelope"
+ERR_INVALID_PAYLOAD = "invalid_payload"
+ERR_UNKNOWN_TYPE = "unknown_type"
+
 
 def _ws_error_envelope(code: str, message: str) -> dict:
     return {"type": "error", "payload": {"code": code, "message": message}}
@@ -39,13 +45,13 @@ async def _handle_send_message(
     db, sender_oid: ObjectId, payload: object
 ) -> dict | None:
     if not isinstance(payload, dict):
-        return _ws_error_envelope("invalid_payload", "Payload must be an object.")
+        return _ws_error_envelope(ERR_INVALID_PAYLOAD, "Payload must be an object.")
 
     conv_id = payload.get("conversation_id")
     content = payload.get("content")
     if not isinstance(conv_id, str) or not isinstance(content, str):
         return _ws_error_envelope(
-            "invalid_payload", "conversation_id and content must be strings."
+            ERR_INVALID_PAYLOAD, "conversation_id and content must be strings."
         )
 
     result = try_commit_dm(db, sender_oid, conv_id, content)
@@ -59,8 +65,8 @@ async def _handle_send_message(
     conv = db["conversations"].find_one({"_id": ObjectId(conv_id)})
     if conv is not None:
         peer = other_participant_id(conv, sender_oid)
-    if peer is not None:
-        await connection_manager.send_envelope(str(peer), frame)
+        if peer is not None:
+            await connection_manager.send_envelope(str(peer), frame)
 
     return frame
 
@@ -103,7 +109,7 @@ async def dm_socket(
                 await websocket.send_text(
                     json.dumps(
                         _ws_error_envelope(
-                            "invalid_envelope", "Body must be a valid JSON."
+                            ERR_INVALID_JSON, "Body must be a valid JSON."
                         )
                     )
                 )
@@ -113,7 +119,7 @@ async def dm_socket(
                 await websocket.send_text(
                     json.dumps(
                         _ws_error_envelope(
-                            "invalid_envelope", "Top-level JSON must be an object."
+                            ERR_INVALID_ENVELOPE, "Top-level JSON must be an object."
                         )
                     )
                 )
@@ -125,7 +131,7 @@ async def dm_socket(
                 await websocket.send_text(
                     json.dumps(
                         _ws_error_envelope(
-                            "invalid_envelope",
+                            ERR_INVALID_ENVELOPE,
                             "Required: type (string) and payload (object).",
                         )
                     )
@@ -144,7 +150,7 @@ async def dm_socket(
 
             await websocket.send_text(
                 json.dumps(
-                    _ws_error_envelope("unknown_type", f"Unknown type: {msg_type!r}.")
+                    _ws_error_envelope(ERR_UNKNOWN_TYPE, f"Unknown type: {msg_type!r}.")
                 )
             )
 
