@@ -76,7 +76,7 @@ async def dm_socket(
         return
 
     try:
-        payload = jwt.deoode(token, _get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token, _get_jwt_secret(), algorithms=[JWT_ALGORITHM])
         email = payload.get("sub")
         if not email:
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
