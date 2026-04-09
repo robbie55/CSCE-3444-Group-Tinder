@@ -46,11 +46,12 @@ export async function getOutgoingRequests() {
 }
 
 export async function acceptMatchRequest(requestId) {
-    const response = await apiFetch(`/api/match/requests/${requestId}/accept`, {
+    const response = await apiFetch(`/api/match/requests/${requestId}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ status: 'accepted' }),
     });
 
     if (!response.ok) {
@@ -61,11 +62,12 @@ export async function acceptMatchRequest(requestId) {
 }
 
 export async function rejectMatchRequest(requestId) {
-    const response = await apiFetch(`/api/match/requests/${requestId}/reject`, {
+    const response = await apiFetch(`/api/match/requests/${requestId}`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ status: 'rejected' }),
     });
 
     if (!response.ok) {

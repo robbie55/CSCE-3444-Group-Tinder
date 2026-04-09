@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import MatchCard from './MatchCard';
 import { getOutgoingRequests, getConnections, getIncomingRequests } from '../api/match';
 import { apiFetch } from '../api/auth';
@@ -14,9 +14,9 @@ export default function Dashboard() {
     const [connections, setConnections] = useState(new Set());
     const [incomingCount, setIncomingCount] = useState(0);
 
-    const getUserId = (user) => user?.id || user?._id;
+    const getUserId = useCallback((user) => user?.id || user?._id, []);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
 
@@ -69,11 +69,11 @@ export default function Dashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [getUserId]);
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     const handleConnect = (userId) => {
         setOutgoingRequests((prev) => {
