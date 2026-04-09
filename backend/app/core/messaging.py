@@ -1,5 +1,5 @@
 """
-Direct messaging (v1): Mongo helpers, pagination, and WebSocket fan-out.
+Mongo helpers, pagination, and WebSocket fan-out.
 REST remains the source of truth for history; WebSocket pushes `message_created`
 to the other participant when their socket is connected.
 """
@@ -179,6 +179,26 @@ def list_messages_page(
         .sort([("created_at", DESCENDING), ("_id", DESCENDING)])
         .limit(limit)
     )
+    batch = list(cursor)
+    batch.reverse()
+    return batch
+
+
+def list_conversations_for_user(db, user_oid: ObjectId) -> list[dict]:
+    """Conversations that include this user, newest activity first."""
+    return list(
+        db["conversations"]
+        .find({"participant_ids": user_oid})
+        .sort([("last_message_at", DESCENDING), ("updated_at", DESCENDING)])
+    )
+
+
+def message_doc_to_api_dict(doc: dict) -> dict:
+    out = doc.copy()
+    out["_id"] = str(doc["_id"])
+    out["conversation_id"] = str(doc["conversation_id"])
+    out["sender_id"] = str(doc["sender_id"])
+    return out
 
 
 @dataclass(frozen=True)

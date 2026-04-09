@@ -56,11 +56,9 @@ async def _handle_send_message(
     assert result.message is not None
     frame = _ws_message_created_envelope(result.message)
 
-    peer = other_participant_id(
-        db["conversations"].find_one({"_id": ObjectId(conv_id)}),
-        sender_oid,
-    )
-
+    conv = db["conversations"].find_one({"_id": ObjectId(conv_id)})
+    if conv is not None:
+        peer = other_participant_id(conv, sender_oid)
     if peer is not None:
         await connection_manager.send_envelope(str(peer), frame)
 
@@ -105,7 +103,7 @@ async def dm_socket(
                 await websocket.send_text(
                     json.dumps(
                         _ws_error_envelope(
-                            "invalid_envelope", "Top-level JSON must be an object."
+                            "invalid_envelope", "Body must be a valid JSON."
                         )
                     )
                 )
