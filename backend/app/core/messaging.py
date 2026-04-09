@@ -31,7 +31,7 @@ class ConnectionManager:
         self._connections: dict[str, WebSocket] = {}
 
     async def register(self, user_id: str, websocket: WebSocket) -> None:
-        self._connections["user_id"] = websocket
+        self._connections[user_id] = websocket
 
     def disconnect(self, user_id: str) -> None:
         self._connections.pop(user_id, None)
