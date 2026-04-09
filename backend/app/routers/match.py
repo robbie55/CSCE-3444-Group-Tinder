@@ -177,7 +177,9 @@ def get_incoming_requests(
     current_user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    return _get_requests_for_user(current_user=current_user, db=db, direction="incoming")
+    return _get_requests_for_user(
+        current_user=current_user, db=db, direction="incoming"
+    )
 
 
 # Get outgoing match requests from current user
@@ -186,7 +188,9 @@ def get_outgoing_requests(
     current_user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    return _get_requests_for_user(current_user=current_user, db=db, direction="outgoing")
+    return _get_requests_for_user(
+        current_user=current_user, db=db, direction="outgoing"
+    )
 
 
 # Update a match request (accept/reject)
@@ -206,7 +210,9 @@ def update_match_request(
             detail="Status must be accepted or rejected.",
         )
 
-    action = "accept" if request_update.status == MatchRequestStatus.ACCEPTED else "reject"
+    action = (
+        "accept" if request_update.status == MatchRequestStatus.ACCEPTED else "reject"
+    )
 
     request_oid, receiver_oid = _get_pending_request_for_receiver(
         request_id=request_id,
