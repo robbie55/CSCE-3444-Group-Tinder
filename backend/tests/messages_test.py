@@ -72,11 +72,15 @@ class TestMessagingHelpers:
         assert len(first) == 2
 
     def test_conversation_has_participant_true(self, valid_conv_doc):
-        has_member = conversation_has_participant(valid_conv_doc, ObjectId(TEST_USER_ID))
+        has_member = conversation_has_participant(
+            valid_conv_doc, ObjectId(TEST_USER_ID)
+        )
         assert has_member is True
 
     def test_conversation_has_participant_false(self, valid_conv_doc):
-        has_member = conversation_has_participant(valid_conv_doc, ObjectId(THIRD_USER_ID))
+        has_member = conversation_has_participant(
+            valid_conv_doc, ObjectId(THIRD_USER_ID)
+        )
         assert has_member is False
 
     def test_other_participant_id_returns_peer(self, valid_conv_doc):
@@ -169,7 +173,9 @@ class TestMessagesRouter:
             target_user_doc,
         ]
         mock_db["conversations"].find_one.return_value = None
-        mock_db["conversations"].insert_one.return_value.inserted_id = ObjectId(TEST_CONV_ID)
+        mock_db["conversations"].insert_one.return_value.inserted_id = ObjectId(
+            TEST_CONV_ID
+        )
 
         resp = client.post(
             "/api/messages/conversations",
