@@ -144,7 +144,7 @@ def list_my_conversations(
 
 # REST: Paginated message history for one conversation.
 @router.get(
-    "/conversations/{conversation_id}/messages",
+    "/conversations/{conversation_id}",
     response_model=list[MessageRead],
 )
 def get_conversation_messages(
@@ -187,7 +187,7 @@ def get_conversation_messages(
 # REST: Send a message; sender uses this response as source of truth.
 # Peer receives message_created over WebSocket if connected.
 @router.post(
-    "/conversations/{conversation_id}/messages",
+    "/conversations/{conversation_id}",
     response_model=MessageRead,
     status_code=status.HTTP_201_CREATED,
 )
