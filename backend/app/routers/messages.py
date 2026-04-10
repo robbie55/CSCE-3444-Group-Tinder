@@ -1,10 +1,5 @@
-"""
-REST: open DM, list conversations,
-list/send messages (optional HTTP send).
-"""
-
+# sender uses POST response; receiver uses WS + GET.
 import json
-import logging
 
 from bson import ObjectId
 from fastapi import (
@@ -30,17 +25,20 @@ from app.core.messaging import (
     try_commit_dm,
 )
 from app.db.connect import get_db
-from app.models.schemas import ConversationRead, DmOpenRequest, MessageRead, UserRead
+from app.models.schemas import (
+    ConversationRead,
+    DmOpenRequest,
+    MessageCreate,
+    MessageRead,
+    UserRead,
+)
 from app.routers.auth import JWT_ALGORITHM, _get_jwt_secret, get_current_user
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 # WebSocket error codes (WEBSOCKET ONLY)
 ERR_INVALID_JSON = "invalid_json"
 ERR_INVALID_ENVELOPE = "invalid_envelope"
-ERR_INVALID_PAYLOAD = "invalid_payload"
 ERR_UNKNOWN_TYPE = "unknown_type"
 
 
@@ -78,34 +76,22 @@ def _ws_message_created_envelope(message_api_dict: dict) -> dict:
     }
 
 
-async def _handle_send_message(
-    db, sender_oid: ObjectId, payload: object
-) -> dict | None:
-    if not isinstance(payload, dict):
-        return _ws_error_envelope(ERR_INVALID_PAYLOAD, "Payload must be an object.")
-
-    conv_id = payload.get("conversation_id")
-    content = payload.get("content")
-    if not isinstance(conv_id, str) or not isinstance(content, str):
-        return _ws_error_envelope(
-            ERR_INVALID_PAYLOAD, "conversation_id and content must be strings."
-        )
-
-    result = try_commit_dm(db, sender_oid, conv_id, content)
-    if not result.ok:
-        assert result.error is not None
-        return _ws_error_envelope(result.error.code, result.error.message)
-
-    assert result.message is not None
-    frame = _ws_message_created_envelope(result.message)
-
-    conv = db["conversations"].find_one({"_id": ObjectId(conv_id)})
-    if conv is not None:
-        peer = other_participant_id(conv, sender_oid)
-        if peer is not None:
-            await connection_manager.send_envelope(str(peer), frame)
-
-    return frame
+def _raise_http_for_failed_dm(result) -> None:
+    """Map try_commit_dm failure to HTTPException."""
+    if result.ok:
+        return
+    assert result.error is not None
+    code = result.error.code
+    msg = result.error.message
+    status_map = {
+        "invalid_conversation_id": status.HTTP_400_BAD_REQUEST,
+        "conversation_not_found": status.HTTP_404_NOT_FOUND,
+        "forbidden": status.HTTP_403_FORBIDDEN,
+        "validation_error": status.HTTP_422_UNPROCESSABLE_CONTENT,
+        "internal_error": status.HTTP_500_INTERNAL_SERVER_ERROR,
+    }
+    st = status_map.get(code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    raise HTTPException(status_code=st, detail=msg)
 
 
 # REST: Open or resume a DM with another user; returns the conversation (idempotent).
@@ -156,7 +142,7 @@ def list_my_conversations(
     return [_conversation_to_read(db, c) for c in convs]
 
 
-# REST: Paginated message history for one conversation (optional `before` cursor).
+# REST: Paginated message history for one conversation.
 @router.get(
     "/conversations/{conversation_id}/messages",
     response_model=list[MessageRead],
@@ -198,6 +184,34 @@ def get_conversation_messages(
     return [MessageRead(**message_doc_to_api_dict(doc)) for doc in rows]
 
 
+# REST: Send a message; sender uses this response as source of truth.
+# Peer receives message_created over WebSocket if connected.
+@router.post(
+    "/conversations/{conversation_id}/messages",
+    response_model=MessageRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def send_conversation_message(
+    conversation_id: str,
+    body: MessageCreate,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    sender_oid = ObjectId(current_user["_id"])
+    result = try_commit_dm(db, sender_oid, conversation_id, body.content)
+    _raise_http_for_failed_dm(result)
+    assert result.message is not None
+    api_dict = result.message
+    msg_read = MessageRead(**api_dict)
+    conv = db["conversations"].find_one({"_id": ObjectId(conversation_id)})
+    if conv is not None:
+        peer = other_participant_id(conv, sender_oid)
+        if peer is not None:
+            frame = _ws_message_created_envelope(api_dict)
+            await connection_manager.send_envelope(str(peer), frame)
+    return msg_read
+
+
 @router.websocket("/ws")
 async def dm_socket(
     websocket: WebSocket, token: str | None = Query(default=None), db=Depends(get_db)
@@ -222,7 +236,6 @@ async def dm_socket(
         return
 
     user_id_str = str(user["_id"])
-    sender_oid = ObjectId(user_id_str)
 
     await websocket.accept()
     await connection_manager.register(user_id_str, websocket)
@@ -267,12 +280,6 @@ async def dm_socket(
 
             if msg_type == "ping":
                 await websocket.send_text(json.dumps({"type": "pong", "payload": {}}))
-                continue
-
-            if msg_type == "send_message":
-                out = await _handle_send_message(db, sender_oid, msg_payload)
-                if out is not None:
-                    await websocket.send_text(json.dumps(out))
                 continue
 
             await websocket.send_text(
