@@ -154,7 +154,7 @@ def list_messages_page(
     When before_message_id is set, only messages strictly older than that anchor
     (by created_at, then _id) are considered, used to load older history.
     """
-    query: dict[str, Any] = {"conversaton_id": conversation_oid}
+    query: dict[str, Any] = {"conversation_id": conversation_oid}
     if before_message_id:
         try:
             anchor_oid = ObjectId(before_message_id)
