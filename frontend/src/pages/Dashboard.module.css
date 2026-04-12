@@ -78,37 +78,46 @@
     transform: scale(1.05);
 }
 
-.debugPanel {
-    margin-bottom: 24px;
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    padding: 12px;
-}
-
-.debugPanel summary {
-    cursor: pointer;
-    font-weight: 700;
-    color: #334155;
-}
-
-.debugPanel pre {
-    margin: 12px 0 0 0;
-    max-height: 280px;
-    overflow: auto;
-    font-size: 12px;
-    line-height: 1.4;
-    color: #0f172a;
-    background: #e2e8f0;
-    border-radius: 8px;
-    padding: 10px;
-}
-
 .cardsGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 32px;
     width: 100%;
+}
+
+.cardBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.connectButton {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, filter 0.2s ease;
+}
+
+.connectButton:hover:not(:disabled) {
+    filter: brightness(0.95);
+    transform: translateY(-1px);
+}
+
+.connectButton:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.requestError {
+    margin: 0;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 600;
 }
 
 @media (max-width: 768px) {
