@@ -1,7 +1,10 @@
 import { PropTypes } from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import './UserSearchCard.css';
 
 export default function UserSearchCard({ user }) {
+    const navigate = useNavigate();
+
     const initials =
         (user?.full_name ?? '')
             .split(' ')
@@ -35,6 +38,16 @@ export default function UserSearchCard({ user }) {
                         <h3>{user.full_name}</h3>
                         <h6>{user.username}</h6>
                     </div>
+                    <button
+                        type='button'
+                        className='invite-button'
+                        onClick={(e) => {
+                            navigate('/groups');
+                            e.stopPropagation();
+                        }}
+                    >
+                        Invite to Group
+                    </button>
                 </div>
                 {user.bio ? (
                     <p className='card-bio'>{user.bio}</p>
@@ -77,7 +90,7 @@ export default function UserSearchCard({ user }) {
                             )}
                         </div>
                     ) : (
-                        <div className='detail-row'>
+                        <div className='links-row'>
                             <span className='no-card-link'>No external links</span>
                         </div>
                     )}

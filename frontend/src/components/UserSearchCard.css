@@ -67,6 +67,23 @@
     color: #4b5563;
 }
 
+.invite-button {
+    background-color: #00853e;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.2s;
+}
+
+.invite-button:hover {
+    background-color: #006b32;
+}
+
 .card-bio {
     font-size: 14px;
     color: #4b5563;
