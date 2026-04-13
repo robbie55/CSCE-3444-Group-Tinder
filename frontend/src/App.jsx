@@ -1,8 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/dashboard';
-import Connections from './pages/Connections';
+import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
 import Requests from './pages/Requests';
 import SignupPage from './pages/SignupPage';
@@ -42,14 +41,6 @@ export default function App() {
                 element={
                     <ProtectedRoute>
                         <Requests />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path='/connections'
-                element={
-                    <ProtectedRoute>
-                        <Connections />
                     </ProtectedRoute>
                 }
             />

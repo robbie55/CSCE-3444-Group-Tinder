@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Literal
 
 from bson import ObjectId
@@ -17,6 +17,16 @@ from app.routers.auth import get_current_user
 router = APIRouter()
 
 
+def _parse_object_id(value: str, label: str = "id") -> ObjectId:
+    try:
+        return ObjectId(value)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid {label} format.",
+        )
+
+
 def _serialize_match_request_doc(req: dict) -> dict:
     req["_id"] = str(req["_id"])
     req["sender_id"] = str(req["sender_id"])
@@ -30,13 +40,7 @@ def _get_pending_request_for_receiver(
     db,
     action: str,
 ):
-    try:
-        request_oid = ObjectId(request_id)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid request id format.",
-        )
+    request_oid = _parse_object_id(request_id, "request id")
 
     match_request = db["match_requests"].find_one({"_id": request_oid})
     if not match_request:
@@ -100,23 +104,15 @@ def _get_requests_for_user(
     return requests_list
 
 
-# Send a match request to another user
 @router.post("/match/request/{receiver_id}", response_model=MatchRequestRead)
 def send_match_request(
     receiver_id: str,
     current_user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    # Validate receiver_id format
-    try:
-        receiver_oid = ObjectId(receiver_id)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid receiver id format.",
-        )
+    receiver_oid = _parse_object_id(receiver_id, "receiver id")
+    sender_oid = ObjectId(current_user["_id"])
 
-    # Check if receiver exists
     receiver = db["users"].find_one({"_id": receiver_oid})
     if not receiver:
         raise HTTPException(
@@ -124,25 +120,23 @@ def send_match_request(
             detail="Receiver user not found.",
         )
 
-    # Check if user is trying to connect with themselves
-    if ObjectId(current_user["_id"]) == receiver_oid:
+    if sender_oid == receiver_oid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot send match request to yourself.",
         )
 
-    # Check if a request already exists
     existing_request = db["match_requests"].find_one(
         {
             "$or": [
                 {
-                    "sender_id": ObjectId(current_user["_id"]),
+                    "sender_id": sender_oid,
                     "receiver_id": receiver_oid,
                     "status": MatchRequestStatus.PENDING.value,
                 },
                 {
                     "sender_id": receiver_oid,
-                    "receiver_id": ObjectId(current_user["_id"]),
+                    "receiver_id": sender_oid,
                     "status": MatchRequestStatus.PENDING.value,
                 },
             ]
@@ -155,12 +149,11 @@ def send_match_request(
             detail="Match request already exists.",
         )
 
-    # Create the match request
     match_request = {
-        "sender_id": ObjectId(current_user["_id"]),
+        "sender_id": sender_oid,
         "receiver_id": receiver_oid,
         "status": MatchRequestStatus.PENDING.value,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(UTC),
         "updated_at": None,
     }
 
@@ -171,7 +164,6 @@ def send_match_request(
     return MatchRequestRead(**match_request)
 
 
-# Get incoming match requests for current user
 @router.get("/match/requests/incoming", response_model=list[MatchRequestWithUser])
 def get_incoming_requests(
     current_user=Depends(get_current_user),
@@ -182,7 +174,6 @@ def get_incoming_requests(
     )
 
 
-# Get outgoing match requests from current user
 @router.get("/match/requests/outgoing", response_model=list[MatchRequestWithUser])
 def get_outgoing_requests(
     current_user=Depends(get_current_user),
@@ -193,7 +184,6 @@ def get_outgoing_requests(
     )
 
 
-# Update a match request (accept/reject)
 @router.patch("/match/requests/{request_id}", response_model=MatchRequestRead)
 def update_match_request(
     request_id: str,
@@ -201,15 +191,6 @@ def update_match_request(
     current_user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    if request_update.status not in {
-        MatchRequestStatus.ACCEPTED,
-        MatchRequestStatus.REJECTED,
-    }:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Status must be accepted or rejected.",
-        )
-
     action = (
         "accept" if request_update.status == MatchRequestStatus.ACCEPTED else "reject"
     )
@@ -230,7 +211,7 @@ def update_match_request(
         {
             "$set": {
                 "status": request_update.status.value,
-                "updated_at": datetime.utcnow(),
+                "updated_at": datetime.now(UTC),
             }
         },
     )
@@ -247,22 +228,22 @@ def update_match_request(
     return MatchRequestRead(**updated_request)
 
 
-# Get all accepted connections (mutual matches)
 @router.get("/match/connections", response_model=list[UserRead])
 def get_connections(
     current_user=Depends(get_current_user),
     db=Depends(get_db),
 ):
-    # Find all accepted requests where current user is either sender or receiver
+    current_user_oid = ObjectId(current_user["_id"])
+
     accepted_requests = db["match_requests"].find(
         {
             "$or": [
                 {
-                    "sender_id": ObjectId(current_user["_id"]),
+                    "sender_id": current_user_oid,
                     "status": MatchRequestStatus.ACCEPTED.value,
                 },
                 {
-                    "receiver_id": ObjectId(current_user["_id"]),
+                    "receiver_id": current_user_oid,
                     "status": MatchRequestStatus.ACCEPTED.value,
                 },
             ]
@@ -271,10 +252,9 @@ def get_connections(
 
     connections = []
     for req in accepted_requests:
-        # Get the other user (not current user)
         other_user_id = (
             req["receiver_id"]
-            if req["sender_id"] == ObjectId(current_user["_id"])
+            if req["sender_id"] == current_user_oid
             else req["sender_id"]
         )
 

@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import UserSearchCard from '../components/UserSearchCard';
+import { Link } from 'react-router-dom';
+import { apiFetch } from '../api/auth';
 import {
     getOutgoingRequests,
     getConnections,
     getIncomingRequests,
     sendMatchRequest,
 } from '../api/match';
-import { apiFetch } from '../api/auth';
 import Sidebar from '../components/Sidebar';
-import styles from './Dashboard.module.css';
+import UserSearchCard from '../components/UserSearchCard';
+import './Dashboard.css';
 
 export default function Dashboard() {
     const [users, setUsers] = useState([]);
@@ -120,12 +121,8 @@ export default function Dashboard() {
     };
 
     const getUserStatus = (userId) => {
-        if (connections.has(userId)) {
-            return 'connected';
-        }
-        if (outgoingRequests.has(userId)) {
-            return 'pending';
-        }
+        if (connections.has(userId)) return 'connected';
+        if (outgoingRequests.has(userId)) return 'pending';
         return null;
     };
 
@@ -141,16 +138,10 @@ export default function Dashboard() {
         },
     });
 
-    const getActionLabel = (status, isSending) => {
-        if (status === 'connected') {
-            return 'Connected';
-        }
-        if (status === 'pending') {
-            return 'Pending';
-        }
-        if (isSending) {
-            return 'Sending...';
-        }
+    const getActionLabel = (userStatus, isSending) => {
+        if (userStatus === 'connected') return 'Connected';
+        if (userStatus === 'pending') return 'Pending';
+        if (isSending) return 'Sending...';
         return 'Connect';
     };
 
@@ -158,16 +149,15 @@ export default function Dashboard() {
 
     if (loading) {
         content = (
-            <div className={styles.loadingSpinner}>
-                <div className={styles.spinner}></div>
-                <p>Loading matches...</p>
+            <div className='page-empty'>
+                <p className='empty-message'>Loading matches...</p>
             </div>
         );
     } else if (error) {
         content = (
-            <div className={styles.errorContainer}>
-                <p className={styles.errorText}>{error}</p>
-                <button className={styles.retryButton} onClick={fetchData}>
+            <div className='page-empty'>
+                <p className='empty-message'>{error}</p>
+                <button className='dashboard-retry' onClick={fetchData}>
                     Try Again
                 </button>
             </div>
@@ -175,53 +165,60 @@ export default function Dashboard() {
     } else {
         content = (
             <>
-                <div className={styles.header}>
-                    <h1>Find Your Study Group</h1>
-                    <p>Connect with users who have similar skills and major.</p>
+                <div className='dashboard-header'>
+                    <h2>Find Your Study Group</h2>
+                    <p className='dashboard-subtitle'>
+                        Connect with users who have similar skills and major.
+                    </p>
                 </div>
 
-                <div className={styles.notificationBanner}>
+                <div className='dashboard-banner'>
                     <p>
                         Incoming: <strong>{incomingCount}</strong> | Outgoing:{' '}
                         <strong>{outgoingRequests.size}</strong>
                     </p>
-                    <a href='/requests' className={styles.bannerLink}>
+                    <Link to='/requests' className='dashboard-banner-link'>
                         View Requests
-                    </a>
+                    </Link>
                 </div>
 
                 {users.length === 0 ? (
-                    <div className={styles.emptyState}>
-                        <p>No similar users found yet.</p>
-                        <button className={styles.retryButton} onClick={fetchData}>
+                    <div className='page-empty'>
+                        <p className='empty-message'>No similar users found yet.</p>
+                        <button className='dashboard-retry' onClick={fetchData}>
                             Refresh
                         </button>
                     </div>
                 ) : (
-                    <div className={styles.cardsGrid}>
+                    <div className='users'>
                         {users.map((user) => {
                             const userId = user.id;
-                            const status = getUserStatus(userId);
+                            const userStatus = getUserStatus(userId);
                             const isSending = sendingRequests.has(userId);
                             const cardUser = normalizeUserForCard(user);
 
                             return (
-                                <div key={userId} className={styles.cardBlock}>
+                                <div key={userId} className='dashboard-card-block'>
                                     <UserSearchCard user={cardUser} />
+                                    {typeof user.match_score === 'number' && (
+                                        <p className='dashboard-match-score'>
+                                            {Math.round(user.match_score * 100)}% match
+                                        </p>
+                                    )}
                                     <button
                                         type='button'
-                                        className={styles.connectButton}
+                                        className='dashboard-connect-btn'
                                         disabled={
-                                            status === 'connected' ||
-                                            status === 'pending' ||
+                                            userStatus === 'connected' ||
+                                            userStatus === 'pending' ||
                                             isSending
                                         }
                                         onClick={() => handleConnect(userId)}
                                     >
-                                        {getActionLabel(status, isSending)}
+                                        {getActionLabel(userStatus, isSending)}
                                     </button>
                                     {requestErrors.has(userId) && (
-                                        <p className={styles.requestError}>
+                                        <p className='dashboard-request-error'>
                                             {requestErrors.get(userId)}
                                         </p>
                                     )}
@@ -235,13 +232,11 @@ export default function Dashboard() {
     }
 
     return (
-        <div className={styles.page}>
-            <div className={styles.pageSidebar}>
+        <div className='page'>
+            <div className='page-sidebar'>
                 <Sidebar />
             </div>
-            <div className={styles.pageContent}>
-                <div className={styles.container}>{content}</div>
-            </div>
+            <div className='page-content'>{content}</div>
         </div>
     );
 }

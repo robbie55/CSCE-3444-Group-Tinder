@@ -58,10 +58,6 @@ class UserUpdate(BaseModel):
 # =======================
 
 
-class MatchRequestCreate(BaseModel):
-    receiver_id: str
-
-
 class MatchRequestUpdate(BaseModel):
     status: MatchRequestStatus
 
