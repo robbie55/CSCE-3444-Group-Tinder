@@ -1,11 +1,13 @@
 .profile-card {
-    background: white;
-    border-radius: 8px;
-    padding: 24px;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
     box-shadow:
         0 1px 3px 0 rgba(0, 0, 0, 0.1),
         0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow var(--transition-fast);
+    display: flex;
+    flex-direction: column;
 }
 
 .profile-card:hover {
@@ -17,7 +19,7 @@
 .card-header {
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .card-avatar {
@@ -27,7 +29,7 @@
     overflow: hidden;
     flex-shrink: 0;
     position: relative;
-    background-color: #e5e7eb;
+    background-color: var(--color-border-light);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -42,78 +44,97 @@
 .card-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .info-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 8px;
-    gap: 8px;
+    margin-bottom: var(--space-2);
+    gap: var(--space-2);
 }
 
 .info-names h3 {
-    font-size: 18px;
+    font-size: var(--text-lg);
     font-weight: 600;
-    margin: 0 0 4px 0;
+    margin: 0 0 var(--space-1) 0;
 }
 
 .info-names h6 {
     font-size: 10px;
-    color: #4b5563;
+    color: var(--color-text-secondary);
 }
 
 .card-bio {
-    font-size: 14px;
-    color: #4b5563;
-    margin: 8px 0 12px 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: var(--space-2) 0 var(--space-3) 0;
     line-height: 1.4;
+    min-height: 39.1875px;
+    max-height: 39.1875px;
+    overflow-y: auto;
 }
 
 .card-details {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
+    height: 100%;
 }
 
 .detail-row {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .skill-row {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .skill-badge {
-    padding: 2px 8px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-size: 12px;
+    padding: 2px var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
     color: #374151;
-    background-color: white;
+    background-color: var(--color-surface);
+}
+
+.no-skills {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
 }
 
 .card-email {
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 500;
-    color: #00853e;
+    color: var(--color-primary);
     text-decoration: none;
+    transition: color var(--transition-fast);
 }
 
 .card-email:hover {
     text-decoration: underline;
 }
 
+.links-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: auto;
+}
+
 .card-link,
 .no-card-link {
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 500;
-    color: #00853e;
+    color: var(--color-primary);
     text-decoration: none;
 }
 
