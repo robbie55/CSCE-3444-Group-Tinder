@@ -291,4 +291,4 @@ async def dm_socket(
     except WebSocketDisconnect:
         pass
     finally:
-        connection_manager.disconnect(user_id_str)
+        connection_manager.disconnect(user_id_str, websocket)

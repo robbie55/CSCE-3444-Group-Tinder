@@ -25,16 +25,25 @@ PREVIEW_MAX_LEN = 200
 
 
 class ConnectionManager:
-    """Maps authenticated user id (string) -> one active WebSocket."""
+    """Maps user id -> one active WebSocket; a new register closes the previous socket."""
 
     def __init__(self) -> None:
         self._connections: dict[str, WebSocket] = {}
 
     async def register(self, user_id: str, websocket: WebSocket) -> None:
+        old = self._connections.get(user_id)
+        if old is not None and old is not websocket:
+            try:
+                await old.close(code=1001)
+            except Exception:
+                logger.debug(
+                    "Closing superseded WS failed for user %s", user_id, exc_info=True
+                )
         self._connections[user_id] = websocket
 
-    def disconnect(self, user_id: str) -> None:
-        self._connections.pop(user_id, None)
+    def disconnect(self, user_id: str, websocket: WebSocket) -> None:
+        if self._connections.get(user_id) is websocket:
+            self._connections.pop(user_id, None)
 
     async def send_envelope(self, user_id: str, envelope: dict[str, Any]) -> None:
         ws = self._connections.get(user_id)
@@ -44,7 +53,7 @@ class ConnectionManager:
             await ws.send_text(json.dumps(envelope))
         except Exception:
             logger.debug("WS send failed for user %s; dropping connection", user_id)
-            self.disconnect(user_id)
+            self.disconnect(user_id, ws)
 
 
 connection_manager = ConnectionManager()

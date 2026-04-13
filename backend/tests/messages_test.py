@@ -1,5 +1,6 @@
+import asyncio
 from datetime import datetime, timezone
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from bson import ObjectId
@@ -7,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.app import app
 from app.core.messaging import (
+    ConnectionManager,
     canonical_participant_ids,
     conversation_has_participant,
     message_doc_to_api_dict,
@@ -143,6 +145,59 @@ class TestTryCommitDm:
         mock_db["conversations"].update_one.assert_called_once()
 
 
+class TestConnectionManager:
+    def test_second_register_closes_previous_socket(self):
+        async def _run() -> None:
+            mgr = ConnectionManager()
+            ws_old = AsyncMock()
+            ws_old.close = AsyncMock()
+            ws_new = AsyncMock()
+            ws_new.close = AsyncMock()
+            await mgr.register("u1", ws_old)
+            await mgr.register("u1", ws_new)
+            ws_old.close.assert_awaited_once_with(code=1001)
+            assert mgr._connections["u1"] is ws_new
+            ws_new.close.assert_not_awaited()
+
+        asyncio.run(_run())
+
+    def test_disconnect_superseded_socket_does_not_remove_current(self):
+        async def _run() -> None:
+            mgr = ConnectionManager()
+            ws_old = AsyncMock()
+            ws_old.close = AsyncMock()
+            ws_new = AsyncMock()
+            await mgr.register("u1", ws_old)
+            await mgr.register("u1", ws_new)
+            mgr.disconnect("u1", ws_old)
+            assert mgr._connections.get("u1") is ws_new
+
+        asyncio.run(_run())
+
+    def test_disconnect_other_socket_instance_does_not_pop(self):
+        async def _run() -> None:
+            mgr = ConnectionManager()
+            ws_a = AsyncMock()
+            ws_a.close = AsyncMock()
+            await mgr.register("u1", ws_a)
+            other = AsyncMock()
+            mgr.disconnect("u1", other)
+            assert mgr._connections.get("u1") is ws_a
+
+        asyncio.run(_run())
+
+    def test_send_envelope_failure_drops_only_that_connection(self):
+        async def _run() -> None:
+            mgr = ConnectionManager()
+            ws = AsyncMock()
+            ws.send_text = AsyncMock(side_effect=RuntimeError("send failed"))
+            await mgr.register("u1", ws)
+            await mgr.send_envelope("u1", {"type": "message_created", "payload": {}})
+            assert "u1" not in mgr._connections
+
+        asyncio.run(_run())
+
+
 class TestMessagesRouter:
     def test_open_or_get_dm_success_returns_200(self, client, mock_db):
         target_user_doc = {
@@ -192,7 +247,7 @@ class TestMessagesRouter:
             "participant_ids": [ObjectId(OTHER_USER_ID), ObjectId(THIRD_USER_ID)],
         }
 
-        resp = client.get(f"/api/messages/conversations/{TEST_CONV_ID}/messages")
+        resp = client.get(f"/api/messages/conversations/{TEST_CONV_ID}")
 
         assert resp.status_code == 403
 
@@ -201,7 +256,7 @@ class TestMessagesRouter:
         mock_db["messages"].insert_one.return_value.inserted_id = ObjectId(TEST_MSG_ID)
 
         resp = client.post(
-            f"/api/messages/conversations/{TEST_CONV_ID}/messages",
+            f"/api/messages/conversations/{TEST_CONV_ID}",
             json={"content": "hello"},
         )
 
