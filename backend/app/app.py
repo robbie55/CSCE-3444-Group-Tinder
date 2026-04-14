@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.db.connect import lifespan
-from app.routers import auth, groups, match, users
+from app.routers import auth, groups, match, messages, users
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,7 @@ app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(groups.router, prefix="/api/groups", tags=["groups"])
 app.include_router(match.router, prefix="/api", tags=["match"])
+app.include_router(messages.router, prefix="/api/messages", tags=["messages"])
 
 
 @app.get("/")
