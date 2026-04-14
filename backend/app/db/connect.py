@@ -27,9 +27,13 @@ db_state = DatabaseState()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # Startup
+    # Try explicit env URI first, fallback to user/pass values
     db_user = os.getenv("DB_USER")
     db_pass = os.getenv("DB_PASS")
-    uri = f"mongodb+srv://{db_user}:{db_pass}@group-matchmaker-csce34.hw6u9in.mongodb.net/?appName=group-matchmaker-csce3444"
+    uri = os.getenv(
+        "MONGO_URI",
+        f"mongodb+srv://{db_user}:{db_pass}@group-matchmaker-csce34.hw6u9in.mongodb.net/?appName=group-matchmaker-csce3444",
+    )
 
     db_client = MongoClient(uri)
 

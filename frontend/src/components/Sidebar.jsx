@@ -27,6 +27,9 @@ export default function Sidebar() {
                 <Link className={linkClass('/search')} to='/search'>
                     Search
                 </Link>
+                <Link className={linkClass('/requests')} to='/requests'>
+                    Requests
+                </Link>
             </div>
             <div className='sidebar-logout'>
                 <button
