@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
+    acceptMatchRequest,
+    getConnections,
     getIncomingRequests,
     getOutgoingRequests,
-    getConnections,
-    acceptMatchRequest,
     rejectMatchRequest,
 } from '../api/match';
 import RequestCard from '../components/RequestCard';
@@ -19,6 +19,7 @@ export default function Requests() {
     const [error, setError] = useState(null);
 
     const getUserId = (user) => user?.id || user?._id;
+    const getRequestId = (req) => req?.id ?? req?._id;
 
     useEffect(() => {
         fetchData();
@@ -47,7 +48,7 @@ export default function Requests() {
     const handleAccept = async (requestId) => {
         try {
             await acceptMatchRequest(requestId);
-            setRequests((prev) => prev.filter((req) => req.id !== requestId));
+            setRequests((prev) => prev.filter((req) => getRequestId(req) !== requestId));
             const connectionsData = await getConnections();
             setConnectionsList(connectionsData);
         } catch (err) {
@@ -58,7 +59,7 @@ export default function Requests() {
     const handleReject = async (requestId) => {
         try {
             await rejectMatchRequest(requestId);
-            setRequests((prev) => prev.filter((req) => req.id !== requestId));
+            setRequests((prev) => prev.filter((req) => getRequestId(req) !== requestId));
         } catch (err) {
             console.error('Error rejecting request:', err);
         }
@@ -104,7 +105,7 @@ export default function Requests() {
                         <div className='users'>
                             {requests.map((request) => (
                                 <RequestCard
-                                    key={request.id}
+                                    key={getRequestId(request)}
                                     request={request}
                                     onAccept={handleAccept}
                                     onReject={handleReject}
@@ -124,7 +125,10 @@ export default function Requests() {
                                 const user = request.receiver;
                                 if (!user) return null;
                                 return (
-                                    <div key={request.id} className='outgoing-request-card'>
+                                    <div
+                                        key={getRequestId(request)}
+                                        className='outgoing-request-card'
+                                    >
                                         <UserSearchCard user={normalizeUserForCard(user)} />
                                         <span className='outgoing-request-status'>Pending</span>
                                     </div>

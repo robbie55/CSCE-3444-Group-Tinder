@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types';
-import UserSearchCard from './UserSearchCard';
 import './RequestCard.css';
+import UserSearchCard from './UserSearchCard';
 
 export default function RequestCard({ request, onAccept, onReject }) {
+    const requestId = request.id ?? request._id;
     const user = request.sender;
 
     if (!user) {
@@ -25,10 +26,10 @@ export default function RequestCard({ request, onAccept, onReject }) {
         <div className='request-card'>
             <UserSearchCard user={cardUser} />
             <div className='request-card-actions'>
-                <button className='request-card-reject' onClick={() => onReject(request.id)}>
+                <button className='request-card-reject' onClick={() => onReject(requestId)}>
                     Reject
                 </button>
-                <button className='request-card-accept' onClick={() => onAccept(request.id)}>
+                <button className='request-card-accept' onClick={() => onAccept(requestId)}>
                     Accept
                 </button>
             </div>
@@ -39,6 +40,7 @@ export default function RequestCard({ request, onAccept, onReject }) {
 RequestCard.propTypes = {
     request: PropTypes.shape({
         id: PropTypes.string,
+        _id: PropTypes.string,
         sender: PropTypes.shape({
             avatar_url: PropTypes.string,
             full_name: PropTypes.string,
