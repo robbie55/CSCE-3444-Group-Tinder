@@ -7,6 +7,8 @@ from fastapi import FastAPI
 from pymongo.database import Database as MongoDatabase
 from pymongo.mongo_client import MongoClient
 
+from app.core.messaging import ensure_messaging_indexes
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,8 @@ async def lifespan(_app: FastAPI):
 
     db_state.client = db_client
     db_state.db = db_state.client["matchmaker_db"]
+
+    ensure_messaging_indexes(db_state.db)
 
     yield  # App runs
 

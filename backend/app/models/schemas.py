@@ -85,3 +85,38 @@ class GroupUpdate(BaseModel):
     course_code: Optional[str] = None
     max_members: Optional[int] = None
     tags: Optional[List[str]] = None
+
+
+# =======================
+# DIRECT MESSAGING (v1)
+# =======================
+
+
+class DmOpenRequest(BaseModel):
+    """Start or resume a 1:1 conversation with another user."""
+
+    other_user_id: str
+
+
+class MessageCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=8000)
+
+
+class MessageRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    conversation_id: str
+    sender_id: str
+    content: str
+    created_at: datetime
+
+
+class ConversationRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    participants: List[UserRead]
+    last_message_at: Optional[datetime] = None
+    last_message_preview: Optional[str] = None
+    created_at: datetime
