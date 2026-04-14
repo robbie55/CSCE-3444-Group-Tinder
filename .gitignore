@@ -1,6 +1,11 @@
 .vscode/
 ARCHITECTURE.md
 CLAUDE.md
+venv/
+backend/venv/
+node_modules/
+.env
+.DS_Store
 graphify-out/
 .venv_main/
 .claude/
