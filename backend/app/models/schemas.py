@@ -3,7 +3,7 @@ from typing import Annotated, Dict, List, Optional
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, EmailStr, Field, HttpUrl
 
-from app.models.enums import Major
+from app.models.enums import Major, MatchRequestStatus
 
 # Helper: MongoDB Atlas uses stringfied object id's, use this for id fields
 PyObjectId = Annotated[str, BeforeValidator(str)]
@@ -54,6 +54,31 @@ class UserUpdate(BaseModel):
 
 
 # =======================
+# MATCH REQUEST MODELS
+# =======================
+
+
+class MatchRequestUpdate(BaseModel):
+    status: MatchRequestStatus
+
+
+class MatchRequestRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    sender_id: str
+    receiver_id: str
+    status: MatchRequestStatus
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class MatchRequestWithUser(MatchRequestRead):
+    sender: Optional[UserRead] = None
+    receiver: Optional[UserRead] = None
+
+
+# =======================
 # GROUP MODELS
 # =======================
 
@@ -85,3 +110,38 @@ class GroupUpdate(BaseModel):
     course_code: Optional[str] = None
     max_members: Optional[int] = None
     tags: Optional[List[str]] = None
+
+
+# =======================
+# DIRECT MESSAGING (v1)
+# =======================
+
+
+class DmOpenRequest(BaseModel):
+    """Start or resume a 1:1 conversation with another user."""
+
+    other_user_id: str
+
+
+class MessageCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=8000)
+
+
+class MessageRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    conversation_id: str
+    sender_id: str
+    content: str
+    created_at: datetime
+
+
+class ConversationRead(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    participants: List[UserRead]
+    last_message_at: Optional[datetime] = None
+    last_message_preview: Optional[str] = None
+    created_at: datetime

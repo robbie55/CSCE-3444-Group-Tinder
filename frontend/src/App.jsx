@@ -3,7 +3,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import GroupDetailPage from './pages/GroupDetailPage';
 import GroupsPage from './pages/GroupsPage';
 import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
 import ProfilePage from './pages/ProfilePage';
+import Requests from './pages/Requests';
 import SignupPage from './pages/SignupPage';
 import UserSearchPage from './pages/UserSearchPage';
 
@@ -12,6 +14,14 @@ export default function App() {
         <Routes>
             <Route path='/login' element={<LoginPage />} />
             <Route path='/signup' element={<SignupPage />} />
+            <Route
+                path='/dashboard'
+                element={
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                }
+            />
             <Route
                 path='/search'
                 element={
@@ -41,6 +51,14 @@ export default function App() {
                 element={
                     <ProtectedRoute>
                         <GroupDetailPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path='/requests'
+                element={
+                    <ProtectedRoute>
+                        <Requests />
                     </ProtectedRoute>
                 }
             />

@@ -166,6 +166,108 @@ We follow a Monorepo structure. Here is where everything lives:
 └── README.md
 ```
 
+## 📮 Postman: Direct messaging (DM)
+
+Use this flow to exercise REST + WebSocket together. Replace placeholders with real values from your database and login responses.
+
+**Assumptions**
+
+- Backend is running (e.g. `uvicorn app.app:app --reload` from `/backend`, default **http://localhost:8000**).
+- `JWT_SECRET` and MongoDB are configured like normal local dev.
+- Set **`base_url`** to `http://localhost:8000` (use `https` / another host if yours differs).
+
+**1. Log in two users**
+
+For each account, send:
+
+`POST {{base_url}}/api/auth/login`
+
+- **Body** → **x-www-form-urlencoded**: `username` = that user’s **email**, `password` = password.
+
+From each **200** response, copy `access_token`:
+
+- **TOKEN_A** — User A
+- **TOKEN_B** — User B
+
+All **messages** REST calls below need **Auth** → **Bearer Token** (paste `TOKEN_A` or `TOKEN_B` depending on who is acting).
+
+**2. Create or open a DM (User A)**
+
+`POST {{base_url}}/api/messages/conversations`
+
+**Headers:** `Authorization: Bearer TOKEN_A`
+
+**Body** → **raw JSON**:
+
+```json
+{
+  "other_user_id": "<USER_B_OBJECT_ID>"
+}
+```
+
+Use User B’s **`_id` as a string** (from signup response, MongoDB, or your users API).
+
+**Expected:** **200** with a conversation object. Save **`id`** from the response as **`CONV_ID`** (this is the DM’s conversation id).
+
+**3. Send a message over HTTP (User A)**
+
+`POST {{base_url}}/api/messages/conversations/<CONV_ID>`
+
+**Headers:** `Authorization: Bearer TOKEN_A`
+
+**Body** → **raw JSON**:
+
+```json
+{
+  "content": "hello from Postman"
+}
+```
+
+**Expected:** **201** with the created message (`_id`, `conversation_id`, `sender_id`, `content`, `created_at`). User B does **not** get this via a second HTTP call; if their WebSocket is connected, they receive **`message_created`** (step 4).
+
+**4. Receive the message on WebSocket (User B)**
+
+In Postman: **New** → **WebSocket**.
+
+**URL:**
+
+`ws://localhost:8000/api/messages/ws?token=TOKEN_B`
+
+Use the **same** `access_token` you copied for User B in step 1 (query param `token`, no `Bearer` prefix). If you open a **second** WebSocket for the **same** user with the **same** token, the server closes the older connection (often close code **1001**) so only one active socket per user stays registered.
+
+Click **Connect**, then repeat **step 3** as User A.
+
+**Expected** on User B’s WebSocket **Messages** panel:
+
+```json
+{
+  "type": "message_created",
+  "payload": {
+    "_id": "...",
+    "conversation_id": "<CONV_ID>",
+    "sender_id": "<USER_A_ID>",
+    "content": "...",
+    "created_at": "..."
+  }
+}
+```
+
+You can send `{"type":"ping","payload":{}}` on the socket to verify the connection; the server replies with `pong`.
+
+**5. List conversations and message history**
+
+As either participant (with the matching Bearer token):
+
+`GET {{base_url}}/api/messages/conversations` — inbox for the current user.
+
+Paginated history for one DM:
+
+`GET {{base_url}}/api/messages/conversations/<CONV_ID>?limit=50`
+
+Optional query: `before=<message_id>` to load older messages than that id.
+
+---
+
 ## 🚀 Workflow
 
 1.  **Always pull the latest changes** before starting work: `git pull origin main`.
