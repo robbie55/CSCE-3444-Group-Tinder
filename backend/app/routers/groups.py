@@ -334,19 +334,7 @@ def add_member_as_owner(
     oid = group_doc["_id"]
     owner_oid = group_doc["created_by"]
 
-    try:
-        user_oid = ObjectId(user_id)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user id format.",
-        )
-
-    if user_oid == owner_oid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot add yourself.",
-        )
+    user_oid = _resolve_invite_oids([user_id], owner_oid)[0]
 
     member_ids = group_doc.get("member_ids", [])
     if user_oid in member_ids:

@@ -11,6 +11,7 @@ import {
 import { getCurrentUser } from '../api/users';
 import ConnectionPicker from '../components/ConnectionPicker.jsx';
 import GroupFormModal from '../components/GroupFormModal.jsx';
+import Modal from '../components/Modal.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import './GroupDetailPage.css';
 
@@ -202,7 +203,7 @@ export default function GroupDetailPage() {
                         <div className='group-detail-actions'>
                             {!isMember && !isFull && (
                                 <button
-                                    className='action-btn action-btn-primary'
+                                    className='modal-btn modal-btn-primary'
                                     onClick={handleJoin}
                                     disabled={actionLoading}
                                 >
@@ -210,13 +211,13 @@ export default function GroupDetailPage() {
                                 </button>
                             )}
                             {!isMember && isFull && (
-                                <button className='action-btn action-btn-disabled' disabled>
+                                <button className='modal-btn modal-btn-disabled' disabled>
                                     Group Full
                                 </button>
                             )}
                             {isMember && !isOwner && (
                                 <button
-                                    className='action-btn action-btn-secondary'
+                                    className='modal-btn modal-btn-secondary'
                                     onClick={handleLeave}
                                     disabled={actionLoading}
                                 >
@@ -226,7 +227,7 @@ export default function GroupDetailPage() {
                             {isOwner && (
                                 <>
                                     <button
-                                        className='action-btn action-btn-primary'
+                                        className='modal-btn modal-btn-primary'
                                         onClick={() => {
                                             setInviteError('');
                                             setInviteModalOpen(true);
@@ -236,7 +237,7 @@ export default function GroupDetailPage() {
                                         {isFull ? 'Group Full' : 'Add Member'}
                                     </button>
                                     <button
-                                        className='action-btn action-btn-secondary'
+                                        className='modal-btn modal-btn-secondary'
                                         onClick={() => {
                                             setSaveError('');
                                             setEditModalOpen(true);
@@ -245,7 +246,7 @@ export default function GroupDetailPage() {
                                         Edit Group
                                     </button>
                                     <button
-                                        className='action-btn action-btn-danger'
+                                        className='modal-btn modal-btn-danger'
                                         onClick={() => {
                                             setActionError('');
                                             setDeleteModalOpen(true);
@@ -277,81 +278,53 @@ export default function GroupDetailPage() {
                     />
                 )}
 
-                {inviteModalOpen && (
-                    <div className='modal-overlay' onClick={() => setInviteModalOpen(false)}>
-                        <div className='modal-content' onClick={(e) => e.stopPropagation()}>
-                            <div className='modal-header'>
-                                <h2>Add Member</h2>
-                                <button
-                                    className='modal-close'
-                                    onClick={() => setInviteModalOpen(false)}
-                                    type='button'
-                                >
-                                    &times;
-                                </button>
-                            </div>
+                <Modal
+                    isOpen={inviteModalOpen}
+                    onClose={() => setInviteModalOpen(false)}
+                    title='Add Member'
+                >
+                    {inviteError && <p className='group-form-error'>{inviteError}</p>}
+                    <ConnectionPicker
+                        mode='single'
+                        excludeUserIds={(group.members ?? []).map((m) => m._id)}
+                        onSelect={handleInvite}
+                        actionLabel='Add'
+                        busyUserId={invitingUserId}
+                    />
+                </Modal>
 
-                            {inviteError && <p className='group-form-error'>{inviteError}</p>}
+                <Modal
+                    isOpen={deleteModalOpen}
+                    onClose={() => setDeleteModalOpen(false)}
+                    title='Delete Group?'
+                    disableClose={actionLoading}
+                >
+                    <p className='delete-confirm-message'>
+                        Are you sure you want to delete &ldquo;{group.name}&rdquo;? This can&rsquo;t
+                        be undone.
+                    </p>
 
-                            <ConnectionPicker
-                                mode='single'
-                                excludeUserIds={(group.members ?? []).map((m) => m._id)}
-                                onSelect={handleInvite}
-                                actionLabel='Add'
-                                busyUserId={invitingUserId}
-                            />
-                        </div>
+                    {actionError && <p className='group-form-error'>{actionError}</p>}
+
+                    <div className='modal-actions'>
+                        <button
+                            className='modal-btn modal-btn-secondary'
+                            type='button'
+                            onClick={() => setDeleteModalOpen(false)}
+                            disabled={actionLoading}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            className='modal-btn modal-btn-danger'
+                            type='button'
+                            onClick={handleDelete}
+                            disabled={actionLoading}
+                        >
+                            {actionLoading ? 'Deleting...' : 'Delete Group'}
+                        </button>
                     </div>
-                )}
-
-                {deleteModalOpen && (
-                    <div
-                        className='modal-overlay'
-                        onClick={() => {
-                            if (!actionLoading) setDeleteModalOpen(false);
-                        }}
-                    >
-                        <div className='modal-content' onClick={(e) => e.stopPropagation()}>
-                            <div className='modal-header'>
-                                <h2>Delete Group?</h2>
-                                <button
-                                    className='modal-close'
-                                    onClick={() => setDeleteModalOpen(false)}
-                                    type='button'
-                                    disabled={actionLoading}
-                                >
-                                    &times;
-                                </button>
-                            </div>
-
-                            <p className='delete-confirm-message'>
-                                Are you sure you want to delete &ldquo;{group.name}&rdquo;? This
-                                can&rsquo;t be undone.
-                            </p>
-
-                            {actionError && <p className='group-form-error'>{actionError}</p>}
-
-                            <div className='modal-actions'>
-                                <button
-                                    className='modal-btn modal-btn-secondary'
-                                    type='button'
-                                    onClick={() => setDeleteModalOpen(false)}
-                                    disabled={actionLoading}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className='modal-btn modal-btn-danger'
-                                    type='button'
-                                    onClick={handleDelete}
-                                    disabled={actionLoading}
-                                >
-                                    {actionLoading ? 'Deleting...' : 'Delete Group'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                </Modal>
             </div>
         </div>
     );

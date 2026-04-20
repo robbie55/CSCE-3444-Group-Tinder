@@ -1,14 +1,5 @@
 import { apiFetch } from './auth';
-
-async function parseApiError(response, fallbackMessage) {
-    const err = await response.json().catch(() => ({}));
-
-    if (response.status === 401) {
-        return 'Session expired or unauthorized. Please log in again.';
-    }
-
-    return err?.detail || fallbackMessage;
-}
+import { parseApiError } from './errors';
 
 export async function sendMatchRequest(userId) {
     const response = await apiFetch(`/api/match/request/${userId}`, {

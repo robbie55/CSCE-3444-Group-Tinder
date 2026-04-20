@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { PropTypes } from 'prop-types';
 import ConnectionPicker from './ConnectionPicker.jsx';
+import Modal from './Modal.jsx';
 import './GroupFormModal.css';
 
 function buildInitialDraft(initialData) {
@@ -19,8 +20,6 @@ function buildInitialDraft(initialData) {
 export default function GroupFormModal({ isOpen, onClose, onSubmit, initialData, saving, error }) {
     const [draft, setDraft] = useState(() => buildInitialDraft(initialData));
     const [inviteUserIds, setInviteUserIds] = useState([]);
-
-    if (!isOpen) return null;
 
     const isEdit = !!initialData;
     const parsedMaxMembers = parseInt(draft.max_members, 10) || 5;
@@ -50,114 +49,101 @@ export default function GroupFormModal({ isOpen, onClose, onSubmit, initialData,
     };
 
     return (
-        <div className='modal-overlay' onClick={onClose}>
-            <div className='modal-content' onClick={(e) => e.stopPropagation()}>
-                <div className='modal-header'>
-                    <h2>{isEdit ? 'Edit Group' : 'Create Group'}</h2>
-                    <button className='modal-close' onClick={onClose} type='button'>
-                        &times;
-                    </button>
+        <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Edit Group' : 'Create Group'}>
+            <form onSubmit={handleSubmit}>
+                <div className='group-form-field'>
+                    <label className='group-form-label'>
+                        Name <span className='required'>*</span>
+                    </label>
+                    <input
+                        className='group-form-input'
+                        type='text'
+                        value={draft.name}
+                        onChange={handleChange('name')}
+                        required
+                    />
                 </div>
 
-                <form onSubmit={handleSubmit}>
+                <div className='group-form-field'>
+                    <label className='group-form-label'>
+                        Description <span className='required'>*</span>
+                    </label>
+                    <textarea
+                        className='group-form-textarea'
+                        value={draft.description}
+                        onChange={handleChange('description')}
+                        rows={3}
+                        required
+                    />
+                </div>
+
+                <div className='group-form-field'>
+                    <label className='group-form-label'>Course Code</label>
+                    <input
+                        className='group-form-input'
+                        type='text'
+                        value={draft.course_code}
+                        onChange={handleChange('course_code')}
+                        placeholder='e.g. CSCE 3444'
+                    />
+                </div>
+
+                <div className='group-form-field'>
+                    <label className='group-form-label'>Max Members</label>
+                    <input
+                        className='group-form-input'
+                        type='number'
+                        value={draft.max_members}
+                        onChange={handleChange('max_members')}
+                        min={2}
+                        max={10}
+                    />
+                </div>
+
+                <div className='group-form-field'>
+                    <label className='group-form-label'>Tags</label>
+                    <input
+                        className='group-form-input'
+                        type='text'
+                        value={draft.tagsText}
+                        onChange={handleChange('tagsText')}
+                        placeholder='e.g. Capstone, Study Group'
+                    />
+                </div>
+
+                {!isEdit && (
                     <div className='group-form-field'>
                         <label className='group-form-label'>
-                            Name <span className='required'>*</span>
+                            Add connections{' '}
+                            <span className='group-form-hint'>
+                                ({inviteUserIds.length}/{maxInvites})
+                            </span>
                         </label>
-                        <input
-                            className='group-form-input'
-                            type='text'
-                            value={draft.name}
-                            onChange={handleChange('name')}
-                            required
+                        <ConnectionPicker
+                            mode='multi'
+                            maxSelectable={maxInvites}
+                            selectedIds={inviteUserIds}
+                            onChange={setInviteUserIds}
                         />
                     </div>
+                )}
 
-                    <div className='group-form-field'>
-                        <label className='group-form-label'>
-                            Description <span className='required'>*</span>
-                        </label>
-                        <textarea
-                            className='group-form-textarea'
-                            value={draft.description}
-                            onChange={handleChange('description')}
-                            rows={3}
-                            required
-                        />
-                    </div>
+                {error && <p className='group-form-error'>{error}</p>}
 
-                    <div className='group-form-field'>
-                        <label className='group-form-label'>Course Code</label>
-                        <input
-                            className='group-form-input'
-                            type='text'
-                            value={draft.course_code}
-                            onChange={handleChange('course_code')}
-                            placeholder='e.g. CSCE 3444'
-                        />
-                    </div>
-
-                    <div className='group-form-field'>
-                        <label className='group-form-label'>Max Members</label>
-                        <input
-                            className='group-form-input'
-                            type='number'
-                            value={draft.max_members}
-                            onChange={handleChange('max_members')}
-                            min={2}
-                            max={10}
-                        />
-                    </div>
-
-                    <div className='group-form-field'>
-                        <label className='group-form-label'>Tags</label>
-                        <input
-                            className='group-form-input'
-                            type='text'
-                            value={draft.tagsText}
-                            onChange={handleChange('tagsText')}
-                            placeholder='e.g. Capstone, Study Group'
-                        />
-                    </div>
-
-                    {!isEdit && (
-                        <div className='group-form-field'>
-                            <label className='group-form-label'>
-                                Add connections{' '}
-                                <span className='group-form-hint'>
-                                    ({inviteUserIds.length}/{maxInvites})
-                                </span>
-                            </label>
-                            <ConnectionPicker
-                                mode='multi'
-                                maxSelectable={maxInvites}
-                                selectedIds={inviteUserIds}
-                                onChange={setInviteUserIds}
-                            />
-                        </div>
-                    )}
-
-                    {error && <p className='group-form-error'>{error}</p>}
-
-                    <div className='modal-actions'>
-                        <button
-                            className='modal-btn modal-btn-secondary'
-                            type='button'
-                            onClick={onClose}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            className='modal-btn modal-btn-primary'
-                            type='submit'
-                            disabled={saving}
-                        >
-                            {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Group'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                <div className='modal-actions'>
+                    <button
+                        className='modal-btn modal-btn-secondary'
+                        type='button'
+                        onClick={onClose}
+                    >
+                        Cancel
+                    </button>
+                    <button className='modal-btn modal-btn-primary' type='submit' disabled={saving}>
+                        {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Group'}
+                    </button>
+                </div>
+            </form>
+        </Modal>
     );
 }
 

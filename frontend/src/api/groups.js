@@ -1,24 +1,15 @@
 import { apiFetch } from './auth';
+import { parseApiError } from './errors';
 
 export async function fetchGroups() {
     const res = await apiFetch('/api/groups/');
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to fetch groups');
-    }
-
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to fetch groups'));
     return res.json();
 }
 
 export async function fetchGroup(groupId) {
     const res = await apiFetch(`/api/groups/${groupId}`);
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to fetch group');
-    }
-
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to fetch group'));
     return res.json();
 }
 
@@ -28,20 +19,7 @@ export async function createGroup(data) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const detail = err.detail;
-        let message = 'Failed to create group';
-
-        if (typeof detail === 'string') {
-            message = detail;
-        } else if (Array.isArray(detail)) {
-            message = detail.map((item) => item?.msg || 'Invalid value').join('; ');
-        }
-        throw new Error(message);
-    }
-
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to create group'));
     return res.json();
 }
 
@@ -51,71 +29,30 @@ export async function updateGroup(groupId, data) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
     });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const detail = err.detail;
-        let message = 'Failed to update group';
-
-        if (typeof detail === 'string') {
-            message = detail;
-        } else if (Array.isArray(detail)) {
-            message = detail.map((item) => item?.msg || 'Invalid value').join('; ');
-        }
-        throw new Error(message);
-    }
-
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to update group'));
     return res.json();
 }
 
 export async function deleteGroup(groupId) {
-    const res = await apiFetch(`/api/groups/${groupId}`, {
-        method: 'DELETE',
-    });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to delete group');
-    }
-
+    const res = await apiFetch(`/api/groups/${groupId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to delete group'));
     return res.json();
 }
 
 export async function joinGroup(groupId) {
-    const res = await apiFetch(`/api/groups/${groupId}/join`, {
-        method: 'POST',
-    });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to join group');
-    }
-
+    const res = await apiFetch(`/api/groups/${groupId}/join`, { method: 'POST' });
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to join group'));
     return res.json();
 }
 
 export async function leaveGroup(groupId) {
-    const res = await apiFetch(`/api/groups/${groupId}/leave`, {
-        method: 'POST',
-    });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to leave group');
-    }
-
+    const res = await apiFetch(`/api/groups/${groupId}/leave`, { method: 'POST' });
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to leave group'));
     return res.json();
 }
 
 export async function addGroupMember(groupId, userId) {
-    const res = await apiFetch(`/api/groups/${groupId}/members/${userId}`, {
-        method: 'POST',
-    });
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to add member');
-    }
-
+    const res = await apiFetch(`/api/groups/${groupId}/members/${userId}`, { method: 'POST' });
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to add member'));
     return res.json();
 }

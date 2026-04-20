@@ -426,7 +426,7 @@ class TestAddMemberAsOwner:
         resp = client.post(f"/api/groups/{TEST_GROUP_ID}/members/not-an-objectid")
 
         assert resp.status_code == 400
-        assert "Invalid user id format" in resp.json()["detail"]
+        assert "Invalid user id" in resp.json()["detail"]
 
 
 # ---------------------------------------------------------------------------
