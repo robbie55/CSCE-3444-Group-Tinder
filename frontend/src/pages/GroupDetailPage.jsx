@@ -233,7 +233,7 @@ export default function GroupDetailPage() {
                                         }}
                                         disabled={isFull}
                                     >
-                                        {isFull ? 'Group Full' : 'Invite Member'}
+                                        {isFull ? 'Group Full' : 'Add Member'}
                                     </button>
                                     <button
                                         className='action-btn action-btn-secondary'
@@ -278,7 +278,7 @@ export default function GroupDetailPage() {
                     <div className='modal-overlay' onClick={() => setInviteModalOpen(false)}>
                         <div className='modal-content' onClick={(e) => e.stopPropagation()}>
                             <div className='modal-header'>
-                                <h2>Invite Member</h2>
+                                <h2>Add Member</h2>
                                 <button
                                     className='modal-close'
                                     onClick={() => setInviteModalOpen(false)}

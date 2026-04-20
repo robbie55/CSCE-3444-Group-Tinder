@@ -25,12 +25,12 @@ def _resolve_invite_oids(
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid user id in invites: {raw}",
+                detail=f"Invalid user id: {raw}",
             )
         if oid == inviter_oid:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot invite yourself.",
+                detail="Cannot add yourself.",
             )
         if oid in seen:
             continue
@@ -47,7 +47,7 @@ def _require_connected(inviter_oid: ObjectId, target_oids: list[ObjectId], db) -
     if any(oid not in connection_ids for oid in target_oids):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only invite users you're connected with.",
+            detail="You can only add users you're connected with.",
         )
 
 
@@ -60,7 +60,7 @@ def _require_users_exist(target_oids: list[ObjectId], db) -> None:
     if any(oid not in found_ids for oid in target_oids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="One or more invited users not found.",
+            detail="One or more selected users not found.",
         )
 
 
@@ -149,7 +149,7 @@ def create_group(
         if 1 + len(invite_oids) > max_members:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Too many invites for group size.",
+                detail="Too many members for group size.",
             )
         _require_connected(creator_oid, invite_oids, db)
         _require_users_exist(invite_oids, db)
@@ -345,7 +345,7 @@ def add_member_as_owner(
     if user_oid == owner_oid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot invite yourself.",
+            detail="Cannot add yourself.",
         )
 
     member_ids = group_doc.get("member_ids", [])

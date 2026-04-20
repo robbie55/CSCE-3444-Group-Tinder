@@ -123,7 +123,7 @@ export default function GroupFormModal({ isOpen, onClose, onSubmit, initialData,
                     {!isEdit && (
                         <div className='group-form-field'>
                             <label className='group-form-label'>
-                                Invite connections{' '}
+                                Add connections{' '}
                                 <span className='group-form-hint'>
                                     ({inviteUserIds.length}/{maxInvites})
                                 </span>

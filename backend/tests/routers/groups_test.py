@@ -297,7 +297,7 @@ class TestCreateGroupWithInvites:
         resp = client.post("/api/groups/", json=payload)
 
         assert resp.status_code == 400
-        assert "Too many invites" in resp.json()["detail"]
+        assert "Too many members" in resp.json()["detail"]
         mock_db["groups"].insert_one.assert_not_called()
 
     def test_create_group_invalid_invite_id_returns_400(self, client, mock_db):
@@ -315,7 +315,7 @@ class TestCreateGroupWithInvites:
         resp = client.post("/api/groups/", json=payload)
 
         assert resp.status_code == 400
-        assert "Cannot invite yourself" in resp.json()["detail"]
+        assert "Cannot add yourself" in resp.json()["detail"]
         mock_db["groups"].insert_one.assert_not_called()
 
 

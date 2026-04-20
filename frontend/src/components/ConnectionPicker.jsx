@@ -109,7 +109,7 @@ export default function ConnectionPicker({
                                     disabled={atCap}
                                     onChange={() => toggle(u._id)}
                                 />
-                                <span>{isSelected ? 'Invited' : 'Invite'}</span>
+                                <span>{isSelected ? 'Added' : 'Add'}</span>
                             </label>
                         ) : (
                             <button
