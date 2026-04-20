@@ -30,6 +30,7 @@ export default function GroupDetailPage() {
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
     const [invitingUserId, setInvitingUserId] = useState(null);
     const [inviteError, setInviteError] = useState('');
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
     useEffect(() => {
         async function load() {
@@ -81,7 +82,6 @@ export default function GroupDetailPage() {
     };
 
     const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this group?')) return;
         setActionLoading(true);
         setActionError('');
         try {
@@ -246,7 +246,10 @@ export default function GroupDetailPage() {
                                     </button>
                                     <button
                                         className='action-btn action-btn-danger'
-                                        onClick={handleDelete}
+                                        onClick={() => {
+                                            setActionError('');
+                                            setDeleteModalOpen(true);
+                                        }}
                                         disabled={actionLoading}
                                     >
                                         {actionLoading ? 'Deleting...' : 'Delete Group'}
@@ -297,6 +300,55 @@ export default function GroupDetailPage() {
                                 actionLabel='Add'
                                 busyUserId={invitingUserId}
                             />
+                        </div>
+                    </div>
+                )}
+
+                {deleteModalOpen && (
+                    <div
+                        className='modal-overlay'
+                        onClick={() => {
+                            if (!actionLoading) setDeleteModalOpen(false);
+                        }}
+                    >
+                        <div className='modal-content' onClick={(e) => e.stopPropagation()}>
+                            <div className='modal-header'>
+                                <h2>Delete Group?</h2>
+                                <button
+                                    className='modal-close'
+                                    onClick={() => setDeleteModalOpen(false)}
+                                    type='button'
+                                    disabled={actionLoading}
+                                >
+                                    &times;
+                                </button>
+                            </div>
+
+                            <p className='delete-confirm-message'>
+                                Are you sure you want to delete &ldquo;{group.name}&rdquo;? This
+                                can&rsquo;t be undone.
+                            </p>
+
+                            {actionError && <p className='group-form-error'>{actionError}</p>}
+
+                            <div className='modal-actions'>
+                                <button
+                                    className='modal-btn modal-btn-secondary'
+                                    type='button'
+                                    onClick={() => setDeleteModalOpen(false)}
+                                    disabled={actionLoading}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    className='modal-btn modal-btn-danger'
+                                    type='button'
+                                    onClick={handleDelete}
+                                    disabled={actionLoading}
+                                >
+                                    {actionLoading ? 'Deleting...' : 'Delete Group'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

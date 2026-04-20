@@ -146,3 +146,29 @@
 .modal-btn-secondary:hover {
     background-color: #e5e7eb;
 }
+
+.modal-btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.modal-btn-danger {
+    background-color: #dc2626;
+    color: white;
+}
+
+.modal-btn-danger:hover {
+    background-color: #b91c1c;
+}
+
+.modal-btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.delete-confirm-message {
+    font-size: 14px;
+    color: #374151;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
