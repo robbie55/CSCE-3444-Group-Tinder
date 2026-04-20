@@ -28,6 +28,23 @@
     gap: var(--space-6);
 }
 
+.retry-button {
+    cursor: pointer;
+    background-color: var(--color-primary);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+    margin: var(--space-3);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-surface);
+    transition: background-color var(--transition-fast);
+}
+
+.retry-button:hover {
+    background-color: var(--color-primary-hover);
+}
+
 .page-empty {
     display: flex;
     align-items: center;
