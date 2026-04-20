@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteGroup, fetchGroup, joinGroup, leaveGroup, updateGroup } from '../api/groups';
+import {
+    addGroupMember,
+    deleteGroup,
+    fetchGroup,
+    joinGroup,
+    leaveGroup,
+    updateGroup,
+} from '../api/groups';
 import { getCurrentUser } from '../api/users';
+import ConnectionPicker from '../components/ConnectionPicker.jsx';
 import GroupFormModal from '../components/GroupFormModal.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import './GroupDetailPage.css';
@@ -19,6 +27,9 @@ export default function GroupDetailPage() {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState('');
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [invitingUserId, setInvitingUserId] = useState(null);
+    const [inviteError, setInviteError] = useState('');
 
     useEffect(() => {
         async function load() {
@@ -79,6 +90,20 @@ export default function GroupDetailPage() {
         } catch (err) {
             setActionError(err.message);
             setActionLoading(false);
+        }
+    };
+
+    const handleInvite = async (userId) => {
+        setInvitingUserId(userId);
+        setInviteError('');
+        try {
+            const updated = await addGroupMember(groupId, userId);
+            setGroup(updated);
+            setInviteModalOpen(false);
+        } catch (err) {
+            setInviteError(err.message);
+        } finally {
+            setInvitingUserId(null);
         }
     };
 
@@ -203,6 +228,16 @@ export default function GroupDetailPage() {
                                     <button
                                         className='action-btn action-btn-primary'
                                         onClick={() => {
+                                            setInviteError('');
+                                            setInviteModalOpen(true);
+                                        }}
+                                        disabled={isFull}
+                                    >
+                                        {isFull ? 'Group Full' : 'Invite Member'}
+                                    </button>
+                                    <button
+                                        className='action-btn action-btn-secondary'
+                                        onClick={() => {
                                             setSaveError('');
                                             setEditModalOpen(true);
                                         }}
@@ -237,6 +272,33 @@ export default function GroupDetailPage() {
                         saving={saving}
                         error={saveError}
                     />
+                )}
+
+                {inviteModalOpen && (
+                    <div className='modal-overlay' onClick={() => setInviteModalOpen(false)}>
+                        <div className='modal-content' onClick={(e) => e.stopPropagation()}>
+                            <div className='modal-header'>
+                                <h2>Invite Member</h2>
+                                <button
+                                    className='modal-close'
+                                    onClick={() => setInviteModalOpen(false)}
+                                    type='button'
+                                >
+                                    &times;
+                                </button>
+                            </div>
+
+                            {inviteError && <p className='group-form-error'>{inviteError}</p>}
+
+                            <ConnectionPicker
+                                mode='single'
+                                excludeUserIds={(group.members ?? []).map((m) => m._id)}
+                                onSelect={handleInvite}
+                                actionLabel='Add'
+                                busyUserId={invitingUserId}
+                            />
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

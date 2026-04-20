@@ -237,6 +237,199 @@ class TestCreateGroup:
 
 
 # ---------------------------------------------------------------------------
+# POST /api/groups/ with invite_user_ids
+# ---------------------------------------------------------------------------
+
+
+class TestCreateGroupWithInvites:
+    def test_create_group_with_connected_invite_succeeds(
+        self, client, mock_db, valid_user_doc, monkeypatch
+    ):
+        """Invitee is a connection → 201; creator + invitee are members."""
+        invitee_oid = ObjectId()
+        monkeypatch.setattr(
+            groups_router, "get_connection_ids", lambda oid, db: {invitee_oid}
+        )
+        mock_db["users"].find.side_effect = [
+            [{"_id": invitee_oid}],  # existence check
+            [valid_user_doc.copy()],  # member expansion
+        ]
+        mock_db["groups"].insert_one.return_value = MagicMock(
+            inserted_id=ObjectId(TEST_GROUP_ID)
+        )
+
+        payload = {**VALID_GROUP_CREATE_PAYLOAD, "invite_user_ids": [str(invitee_oid)]}
+        resp = client.post("/api/groups/", json=payload)
+
+        assert resp.status_code == 201
+        call_args = mock_db["groups"].insert_one.call_args[0][0]
+        assert invitee_oid in call_args["member_ids"]
+        assert ObjectId(TEST_USER_ID) in call_args["member_ids"]
+
+    def test_create_group_with_non_connected_invite_returns_403(
+        self, client, mock_db, monkeypatch
+    ):
+        """Invitee not in connections → 403; group is NOT inserted."""
+        invitee_oid = ObjectId()
+        monkeypatch.setattr(groups_router, "get_connection_ids", lambda oid, db: set())
+
+        payload = {**VALID_GROUP_CREATE_PAYLOAD, "invite_user_ids": [str(invitee_oid)]}
+        resp = client.post("/api/groups/", json=payload)
+
+        assert resp.status_code == 403
+        assert "connected" in resp.json()["detail"]
+        mock_db["groups"].insert_one.assert_not_called()
+
+    def test_create_group_invite_exceeds_max_members_returns_400(
+        self, client, mock_db, monkeypatch
+    ):
+        """Creator + invitees exceeds max_members → 400; group is NOT inserted."""
+        invitees = [ObjectId() for _ in range(5)]
+        monkeypatch.setattr(
+            groups_router, "get_connection_ids", lambda oid, db: set(invitees)
+        )
+
+        payload = {
+            **VALID_GROUP_CREATE_PAYLOAD,
+            "max_members": 3,
+            "invite_user_ids": [str(o) for o in invitees],
+        }
+        resp = client.post("/api/groups/", json=payload)
+
+        assert resp.status_code == 400
+        assert "Too many invites" in resp.json()["detail"]
+        mock_db["groups"].insert_one.assert_not_called()
+
+    def test_create_group_invalid_invite_id_returns_400(self, client, mock_db):
+        """Invite id that isn't a valid ObjectId → 400; group is NOT inserted."""
+        payload = {**VALID_GROUP_CREATE_PAYLOAD, "invite_user_ids": ["not-an-objectid"]}
+        resp = client.post("/api/groups/", json=payload)
+
+        assert resp.status_code == 400
+        assert "Invalid user id" in resp.json()["detail"]
+        mock_db["groups"].insert_one.assert_not_called()
+
+    def test_create_group_self_invite_returns_400(self, client, mock_db):
+        """Creator invites themselves → 400; group is NOT inserted."""
+        payload = {**VALID_GROUP_CREATE_PAYLOAD, "invite_user_ids": [TEST_USER_ID]}
+        resp = client.post("/api/groups/", json=payload)
+
+        assert resp.status_code == 400
+        assert "Cannot invite yourself" in resp.json()["detail"]
+        mock_db["groups"].insert_one.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# POST /api/groups/{group_id}/members/{user_id} (add_member_as_owner)
+# ---------------------------------------------------------------------------
+
+
+class TestAddMemberAsOwner:
+    def test_add_member_success(
+        self, client, mock_db, valid_group_doc, valid_user_doc, monkeypatch
+    ):
+        """Owner adds a connected non-member; 200 and user is added."""
+        invitee_oid = ObjectId()
+        group_doc = valid_group_doc.copy()
+        app.dependency_overrides[groups_router._require_group_owner] = (
+            lambda group_id=None, db=None, current_user=None: group_doc
+        )
+        monkeypatch.setattr(
+            groups_router, "get_connection_ids", lambda oid, db: {invitee_oid}
+        )
+        updated = group_doc.copy()
+        updated["member_ids"] = [*group_doc["member_ids"], invitee_oid]
+        mock_db["users"].find.side_effect = [
+            [{"_id": invitee_oid}],  # existence check
+            [valid_user_doc.copy()],  # member expansion
+        ]
+        mock_db["groups"].find_one.return_value = updated
+
+        resp = client.post(f"/api/groups/{TEST_GROUP_ID}/members/{str(invitee_oid)}")
+
+        assert resp.status_code == 200
+        mock_db["groups"].update_one.assert_called_once()
+        call_args = mock_db["groups"].update_one.call_args[0]
+        assert call_args[0] == {"_id": group_doc["_id"]}
+        assert "$addToSet" in call_args[1]
+
+    def test_add_member_not_connected_returns_403(
+        self, client, mock_db, valid_group_doc, monkeypatch
+    ):
+        """Invitee is not an accepted-match connection → 403; no update."""
+        target_oid = ObjectId()
+        app.dependency_overrides[groups_router._require_group_owner] = (
+            lambda group_id=None, db=None, current_user=None: valid_group_doc.copy()
+        )
+        monkeypatch.setattr(groups_router, "get_connection_ids", lambda oid, db: set())
+
+        resp = client.post(f"/api/groups/{TEST_GROUP_ID}/members/{str(target_oid)}")
+
+        assert resp.status_code == 403
+        assert "connected" in resp.json()["detail"]
+        mock_db["groups"].update_one.assert_not_called()
+
+    def test_add_member_already_in_group_returns_409(
+        self, client, mock_db, valid_group_doc
+    ):
+        """Target is already in member_ids → 409."""
+        existing_oid = ObjectId()
+        group_doc = valid_group_doc.copy()
+        group_doc["member_ids"] = [*group_doc["member_ids"], existing_oid]
+        app.dependency_overrides[groups_router._require_group_owner] = (
+            lambda group_id=None, db=None, current_user=None: group_doc
+        )
+
+        resp = client.post(f"/api/groups/{TEST_GROUP_ID}/members/{str(existing_oid)}")
+
+        assert resp.status_code == 409
+        assert "already in group" in resp.json()["detail"]
+        mock_db["groups"].update_one.assert_not_called()
+
+    def test_add_member_group_full_returns_400(
+        self, client, mock_db, valid_group_doc, monkeypatch
+    ):
+        """Group at capacity → 400."""
+        target_oid = ObjectId()
+        group_doc = valid_group_doc.copy()
+        group_doc["max_members"] = 2
+        group_doc["member_ids"] = [group_doc["member_ids"][0], ObjectId()]
+        app.dependency_overrides[groups_router._require_group_owner] = (
+            lambda group_id=None, db=None, current_user=None: group_doc
+        )
+
+        resp = client.post(f"/api/groups/{TEST_GROUP_ID}/members/{str(target_oid)}")
+
+        assert resp.status_code == 400
+        assert "Group is full" in resp.json()["detail"]
+        mock_db["groups"].update_one.assert_not_called()
+
+    def test_add_member_non_owner_returns_403(self, client, mock_db, valid_group_doc):
+        """Caller isn't the owner → 403 via _require_group_owner (real dependency)."""
+        group_doc = valid_group_doc.copy()
+        group_doc["created_by"] = ObjectId()  # different owner
+        mock_db["groups"].find_one.return_value = group_doc
+
+        resp = client.post(f"/api/groups/{TEST_GROUP_ID}/members/{str(ObjectId())}")
+
+        assert resp.status_code == 403
+        assert "does not match group creator" in resp.json()["detail"]
+
+    def test_add_member_invalid_user_id_returns_400(
+        self, client, mock_db, valid_group_doc
+    ):
+        """Invalid user_id format → 400."""
+        app.dependency_overrides[groups_router._require_group_owner] = (
+            lambda group_id=None, db=None, current_user=None: valid_group_doc.copy()
+        )
+
+        resp = client.post(f"/api/groups/{TEST_GROUP_ID}/members/not-an-objectid")
+
+        assert resp.status_code == 400
+        assert "Invalid user id format" in resp.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
 # GET /api/groups/ (list_groups)
 # ---------------------------------------------------------------------------
 

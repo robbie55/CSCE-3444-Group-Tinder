@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PropTypes } from 'prop-types';
+import ConnectionPicker from './ConnectionPicker.jsx';
 import './GroupFormModal.css';
 
 function buildInitialDraft(initialData) {
@@ -17,10 +18,13 @@ function buildInitialDraft(initialData) {
 
 export default function GroupFormModal({ isOpen, onClose, onSubmit, initialData, saving, error }) {
     const [draft, setDraft] = useState(() => buildInitialDraft(initialData));
+    const [inviteUserIds, setInviteUserIds] = useState([]);
 
     if (!isOpen) return null;
 
     const isEdit = !!initialData;
+    const parsedMaxMembers = parseInt(draft.max_members, 10) || 5;
+    const maxInvites = Math.max(0, parsedMaxMembers - 1);
 
     const handleChange = (field) => (e) => {
         setDraft((prev) => ({ ...prev, [field]: e.target.value }));
@@ -32,13 +36,17 @@ export default function GroupFormModal({ isOpen, onClose, onSubmit, initialData,
             .split(',')
             .map((t) => t.trim())
             .filter(Boolean);
-        onSubmit({
+        const payload = {
             name: draft.name.trim(),
             description: draft.description.trim(),
             course_code: draft.course_code.trim() || null,
-            max_members: parseInt(draft.max_members, 10) || 5,
+            max_members: parsedMaxMembers,
             tags,
-        });
+        };
+        if (!isEdit) {
+            payload.invite_user_ids = inviteUserIds.slice(0, maxInvites);
+        }
+        onSubmit(payload);
     };
 
     return (
@@ -111,6 +119,23 @@ export default function GroupFormModal({ isOpen, onClose, onSubmit, initialData,
                             placeholder='e.g. Capstone, Study Group'
                         />
                     </div>
+
+                    {!isEdit && (
+                        <div className='group-form-field'>
+                            <label className='group-form-label'>
+                                Invite connections{' '}
+                                <span className='group-form-hint'>
+                                    ({inviteUserIds.length}/{maxInvites})
+                                </span>
+                            </label>
+                            <ConnectionPicker
+                                mode='multi'
+                                maxSelectable={maxInvites}
+                                selectedIds={inviteUserIds}
+                                onChange={setInviteUserIds}
+                            />
+                        </div>
+                    )}
 
                     {error && <p className='group-form-error'>{error}</p>}
 

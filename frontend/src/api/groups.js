@@ -106,3 +106,16 @@ export async function leaveGroup(groupId) {
 
     return res.json();
 }
+
+export async function addGroupMember(groupId, userId) {
+    const res = await apiFetch(`/api/groups/${groupId}/members/${userId}`, {
+        method: 'POST',
+    });
+
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || 'Failed to add member');
+    }
+
+    return res.json();
+}

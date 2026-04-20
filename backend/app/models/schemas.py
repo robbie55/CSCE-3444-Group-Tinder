@@ -92,7 +92,7 @@ class GroupBase(BaseModel):
 
 
 class GroupCreate(GroupBase):
-    pass
+    invite_user_ids: List[str] = []
 
 
 class GroupRead(GroupBase):

@@ -68,6 +68,13 @@
     color: #dc2626;
 }
 
+.group-form-label .group-form-hint {
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
 .group-form-input,
 .group-form-textarea {
     width: 100%;
