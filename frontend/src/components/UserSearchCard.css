@@ -68,20 +68,20 @@
 }
 
 .invite-button {
-    background-color: #00853e;
-    color: #fff;
+    background-color: var(--color-primary);
+    color: var(--color-surface);
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 6px;
-    font-size: 12px;
+    font-size: var(--text-xs);
     font-weight: 600;
     cursor: pointer;
-    margin-top: 8px;
-    transition: background-color 0.2s;
+    margin-top: var(--space-2);
+    transition: background-color var(--transition-fast);
 }
 
 .invite-button:hover {
-    background-color: #006b32;
+    background-color: var(--color-primary-hover);
 }
 
 .card-bio {
