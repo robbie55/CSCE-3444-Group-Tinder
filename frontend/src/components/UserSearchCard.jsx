@@ -14,7 +14,12 @@ export default function UserSearchCard({ user }) {
             .toUpperCase() || 'U';
 
     return (
-        <div className='profile-card'>
+        <div
+            className='profile-card'
+            onClick={() => {
+                navigate(`/users/${user._id}`);
+            }}
+        >
             <div className='card-header'>
                 <div className='card-avatar'>
                     {user.avatar_url ? (
@@ -102,7 +107,9 @@ export default function UserSearchCard({ user }) {
 
 // verification to ensure these variables exist
 UserSearchCard.propTypes = {
+    popupHandler: PropTypes.func.isRequired,
     user: PropTypes.shape({
+        _id: PropTypes.string.isRequired,
         full_name: PropTypes.string.isRequired,
         username: PropTypes.string.isRequired,
         bio: PropTypes.string,

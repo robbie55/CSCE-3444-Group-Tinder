@@ -12,12 +12,10 @@ export default function UserSearchPage() {
     const [_loading, _setLoading] = useState(true);
     const [_error, _setError] = useState('');
 
-
-    const [_users, _setUsers] = useState(use_mock_data ? mockUsers : []);
-    const [_currentUserId, _setCurrentUserId] = useState(use_mock_data ? '1234' : null);
+    const [_users, _setUsers] = useState([]);
+    const [_currentUserId, _setCurrentUserId] = useState(null);
 
     const fetchUsers = useCallback(async () => {
-
         try {
             _setLoading(true);
             _setError('');
@@ -40,7 +38,6 @@ export default function UserSearchPage() {
     }, []);
 
     const fetchCurrentUserId = useCallback(async () => {
-
         try {
             _setLoading(true);
             _setError('');
