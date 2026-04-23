@@ -1,4 +1,6 @@
 import './index.css';
+import './styles/layout.css';
+import './styles/modal.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

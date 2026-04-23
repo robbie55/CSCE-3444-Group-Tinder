@@ -1,0 +1,119 @@
+.groups-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.groups-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.groups-create-btn {
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    background-color: #00853e;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.groups-create-btn:hover {
+    background-color: #006d33;
+}
+
+.groups-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+}
+
+.groups-tab {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.groups-tab:hover {
+    color: #111827;
+}
+
+.groups-tab-active {
+    color: #00853e;
+    border-bottom-color: #00853e;
+}
+
+.groups-search {
+    margin-bottom: 24px;
+}
+
+.groups-search-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #111827;
+    font-family: inherit;
+}
+
+.groups-search-input:focus {
+    outline: none;
+    border-color: #00853e;
+    box-shadow: 0 0 0 2px rgba(0, 133, 62, 0.15);
+}
+
+.groups-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+}
+
+@media (min-width: 768px) {
+    .groups-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .groups-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.groups-message {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.groups-error {
+    font-size: 14px;
+    color: #dc2626;
+    background-color: #fef2f2;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.page-empty {
+    display: flex;
+}
+
+.empty-message {
+    font-size: 16px;
+    font-weight: 500;
+    color: #6b7280;
+}

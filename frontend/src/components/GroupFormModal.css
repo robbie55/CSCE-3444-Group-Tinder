@@ -1,0 +1,61 @@
+.group-form-field {
+    margin-bottom: 16px;
+}
+
+.group-form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.group-form-label .required {
+    color: #dc2626;
+}
+
+.group-form-label .group-form-hint {
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.group-form-input,
+.group-form-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #111827;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.group-form-input:focus,
+.group-form-textarea:focus {
+    outline: none;
+    border-color: #00853e;
+    box-shadow: 0 0 0 2px rgba(0, 133, 62, 0.15);
+}
+
+.group-form-textarea {
+    resize: vertical;
+}
+
+.group-form-error {
+    font-size: 14px;
+    color: #dc2626;
+    background-color: #fef2f2;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+}
+
+.delete-confirm-message {
+    font-size: 14px;
+    color: #374151;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}

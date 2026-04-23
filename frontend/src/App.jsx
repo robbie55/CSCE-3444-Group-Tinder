@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
-import Dashboard from './pages/Dashboard';
+import GroupDetailPage from './pages/GroupDetailPage';
+import GroupsPage from './pages/GroupsPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import Requests from './pages/Requests';
@@ -34,6 +35,22 @@ export default function App() {
                 element={
                     <ProtectedRoute>
                         <ProfilePage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path='/groups'
+                element={
+                    <ProtectedRoute>
+                        <GroupsPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path='/groups/:groupId'
+                element={
+                    <ProtectedRoute>
+                        <GroupDetailPage />
                     </ProtectedRoute>
                 }
             />
