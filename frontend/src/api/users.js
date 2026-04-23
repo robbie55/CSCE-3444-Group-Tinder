@@ -1,13 +1,9 @@
 import { apiFetch } from './auth';
+import { parseApiError } from './errors';
 
 export async function getCurrentUser() {
     const res = await apiFetch('/api/users/me');
-
-    if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Failed to fetch current user');
-    }
-
+    if (!res.ok) throw new Error(await parseApiError(res, 'Failed to fetch current user'));
     return res.json();
 }
 

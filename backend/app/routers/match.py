@@ -228,37 +228,43 @@ def update_match_request(
     return MatchRequestRead(**updated_request)
 
 
-@router.get("/match/connections", response_model=list[UserRead])
-def get_connections(
-    current_user=Depends(get_current_user),
-    db=Depends(get_db),
-):
-    current_user_oid = ObjectId(current_user["_id"])
-
+def get_connection_ids(user_oid: ObjectId, db) -> set[ObjectId]:
+    """Return ObjectIds of users with an accepted MatchRequest with user_oid."""
     accepted_requests = db["match_requests"].find(
         {
             "$or": [
                 {
-                    "sender_id": current_user_oid,
+                    "sender_id": user_oid,
                     "status": MatchRequestStatus.ACCEPTED.value,
                 },
                 {
-                    "receiver_id": current_user_oid,
+                    "receiver_id": user_oid,
                     "status": MatchRequestStatus.ACCEPTED.value,
                 },
             ]
         }
     )
 
-    connections = []
+    connection_ids: set[ObjectId] = set()
     for req in accepted_requests:
         other_user_id = (
-            req["receiver_id"]
-            if req["sender_id"] == current_user_oid
-            else req["sender_id"]
+            req["receiver_id"] if req["sender_id"] == user_oid else req["sender_id"]
         )
+        connection_ids.add(other_user_id)
+    return connection_ids
 
-        user = db["users"].find_one({"_id": other_user_id})
+
+@router.get("/match/connections", response_model=list[UserRead])
+def get_connections(
+    current_user=Depends(get_current_user),
+    db=Depends(get_db),
+):
+    current_user_oid = ObjectId(current_user["_id"])
+    connection_ids = get_connection_ids(current_user_oid, db)
+
+    connections = []
+    for other_oid in connection_ids:
+        user = db["users"].find_one({"_id": other_oid})
         if user:
             user["_id"] = str(user["_id"])
             connections.append(UserRead(**user))

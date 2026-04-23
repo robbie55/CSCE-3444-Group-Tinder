@@ -1,0 +1,19 @@
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
+}
+
+.page-sidebar {
+    position: fixed;
+    width: var(--sidebar-width);
+    height: 100vh;
+}
+
+.page-content {
+    flex: 1;
+    width: 100%;
+    padding: var(--space-8) var(--space-4);
+    margin-left: var(--sidebar-width);
+    font-family: var(--font-family);
+}

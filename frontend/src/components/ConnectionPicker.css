@@ -1,0 +1,131 @@
+.connection-picker-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+}
+
+.connection-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.connection-picker-row:last-child {
+    border-bottom: none;
+}
+
+.connection-picker-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.connection-picker-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.connection-picker-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.connection-picker-username {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.connection-picker-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #374151;
+    cursor: pointer;
+}
+
+.connection-picker-check input[type='checkbox'] {
+    accent-color: #00853e;
+    cursor: pointer;
+}
+
+.connection-picker-check input[type='checkbox']:disabled {
+    cursor: not-allowed;
+}
+
+.connection-picker-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    background-color: #00853e;
+    color: white;
+    cursor: pointer;
+}
+
+.connection-picker-btn:hover {
+    background-color: #006d33;
+}
+
+.connection-picker-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.connection-picker-msg,
+.connection-picker-error {
+    font-size: 14px;
+    color: #6b7280;
+    padding: 12px 0;
+    margin: 0;
+}
+
+.connection-picker-error {
+    color: #dc2626;
+}
+
+.connection-picker-empty {
+    padding: 16px;
+    text-align: center;
+    border: 1px dashed #d1d5db;
+    border-radius: 6px;
+    background: #f9fafb;
+}
+
+.connection-picker-empty p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.connection-picker-link {
+    font-size: 14px;
+    color: #00853e;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.connection-picker-link:hover {
+    text-decoration: underline;
+}
