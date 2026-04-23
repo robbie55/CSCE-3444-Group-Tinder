@@ -43,16 +43,6 @@ export default function UserSearchCard({ user }) {
                         <h3>{user.full_name}</h3>
                         <h6>{user.username}</h6>
                     </div>
-                    <button
-                        type='button'
-                        className='invite-button'
-                        onClick={(e) => {
-                            navigate('/groups');
-                            e.stopPropagation();
-                        }}
-                    >
-                        Invite to Group
-                    </button>
                 </div>
                 {user.bio ? (
                     <p className='card-bio'>{user.bio}</p>

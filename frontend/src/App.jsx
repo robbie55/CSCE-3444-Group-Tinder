@@ -45,7 +45,14 @@ export default function App() {
                     </ProtectedRoute>
                 }
             />
-            <Route path='/users/:userId' element={<UserProfilePage />} />
+            <Route
+                path='/users/:userId'
+                element={
+                    <ProtectedRoute>
+                        <UserProfilePage />
+                    </ProtectedRoute>
+                }
+            />
             <Route path='*' element={<Navigate to='/login' replace />} />
         </Routes>
     );
