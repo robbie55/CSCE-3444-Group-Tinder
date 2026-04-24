@@ -281,6 +281,94 @@ class _DmSendResult:
         return cls(ok=False, message=None, error=_DmSendError(code, message))
 
 
+@dataclass(frozen=True)
+class _DmDeleteResult:
+    ok: bool
+    error: _DmSendError | None = None
+
+    @classmethod
+    def success(cls) -> "_DmDeleteResult":
+        return cls(ok=True, error=None)
+
+    @classmethod
+    def failure(cls, code: str, message: str) -> "_DmDeleteResult":
+        return cls(ok=False, error=_DmSendError(code, message))
+
+
+def _refresh_conversation_summary_after_delete(db, conv_oid: ObjectId) -> None:
+    latest = db["messages"].find_one(
+        {"conversation_id": conv_oid},
+        sort=[("created_at", DESCENDING), ("_id", DESCENDING)],
+    )
+
+    now = datetime.now(timezone.utc)
+    if latest is None:
+        db["conversations"].update_one(
+            {"_id": conv_oid},
+            {
+                "$set": {
+                    "updated_at": now,
+                    "last_message_at": None,
+                    "last_message_preview": None,
+                }
+            },
+        )
+        return
+
+    text = latest.get("content", "").strip()
+    preview = (
+        text if len(text) <= PREVIEW_MAX_LEN else text[: PREVIEW_MAX_LEN - 1] + "..."
+    )
+    db["conversations"].update_one(
+        {"_id": conv_oid},
+        {
+            "$set": {
+                "updated_at": now,
+                "last_message_at": latest.get("created_at"),
+                "last_message_preview": preview,
+            }
+        },
+    )
+
+
+def try_delete_dm_message(
+    db,
+    requester_oid: ObjectId,
+    conversation_id: str,
+    message_id: str,
+) -> _DmDeleteResult:
+    try:
+        conv_oid = ObjectId(conversation_id)
+    except Exception:
+        return _DmDeleteResult.failure("invalid_conversation_id", "Invalid conversation id.")
+
+    try:
+        msg_oid = ObjectId(message_id)
+    except Exception:
+        return _DmDeleteResult.failure("invalid_message_id", "Invalid message id.")
+
+    conv = db["conversations"].find_one({"_id": conv_oid})
+    if not conv:
+        return _DmDeleteResult.failure("conversation_not_found", "Conversation not found.")
+
+    if not conversation_has_participant(conv, requester_oid):
+        return _DmDeleteResult.failure(
+            "forbidden", "You are not a member of this conversation."
+        )
+
+    msg = db["messages"].find_one({"_id": msg_oid, "conversation_id": conv_oid})
+    if not msg:
+        return _DmDeleteResult.failure("message_not_found", "Message not found.")
+
+    try:
+        db["messages"].delete_one({"_id": msg_oid, "conversation_id": conv_oid})
+        _refresh_conversation_summary_after_delete(db, conv_oid)
+    except Exception:
+        return _DmDeleteResult.failure("internal_error", "Could not delete message.")
+
+    return _DmDeleteResult.success()
+
+
 def try_commit_dm(
     db,
     sender_oid: ObjectId,
