@@ -1,0 +1,37 @@
+.message-bubble-row {
+    display: flex;
+}
+
+.message-bubble-row--mine {
+    justify-content: flex-end;
+}
+
+.message-bubble {
+    max-width: min(80%, 560px);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-4);
+}
+
+.message-bubble--mine {
+    background: #f0fdf4;
+    border-color: #86efac;
+}
+
+.message-bubble p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.message-bubble span {
+    display: block;
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-align: right;
+}
