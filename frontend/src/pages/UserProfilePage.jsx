@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api/auth';
+import { getConnections, getOutgoingRequests, sendMatchRequest } from '../api/match';
 import { getCurrentUser } from '../api/users';
 import Sidebar from '../components/Sidebar';
 import './ProfilePage.css';
@@ -12,6 +13,9 @@ export default function UserProfilePage() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const [connected, setConnected] = useState(false);
+    const [pending, setPending] = useState(false);
 
     const loadProfile = useCallback(async () => {
         setLoading(true);
@@ -40,9 +44,27 @@ export default function UserProfilePage() {
         }
     }, [userId, navigate]);
 
+    const checkConnections = useCallback(async () => {
+        setLoading(true);
+        setError('');
+
+        try {
+            const connectionsData = await getConnections();
+            setConnected(userId in connectionsData);
+            const outgoingData = await getOutgoingRequests();
+            setPending(userId in outgoingData);
+        } catch (err) {
+            console.error('Error fetching requests:', err);
+            setError(err.message || 'Failed to load connections.');
+        } finally {
+            setLoading(false);
+        }
+    }, [userId]);
+
     useEffect(() => {
         loadProfile();
-    }, [loadProfile]);
+        checkConnections();
+    }, [loadProfile, checkConnections]);
 
     const initials = useMemo(() => {
         const name = user?.full_name;
@@ -60,6 +82,7 @@ export default function UserProfilePage() {
     const linkedinUrl = user?.external_links?.linkedin ?? '';
     const hasExternalLinks = Boolean(githubUrl || linkedinUrl);
     // Loading mode
+    /*
     if (loading) {
         return (
             <div className='page'>
@@ -98,7 +121,7 @@ export default function UserProfilePage() {
             </div>
         );
     }
-
+    */
     // Success mode: view vs edit UI
     return (
         <div className='page'>
@@ -113,8 +136,30 @@ export default function UserProfilePage() {
 
                         <div className='profile-header-info'>
                             <h1 className='profile-name'>Profile</h1>
-                            <div className='profile-username'>{user.username}</div>
-                            <div className='profile-major'>Major: {user.major}</div>
+                            <div className='profile-username'>{user?.username}</div>
+                            <div className='profile-major'>Major: {user?.major}</div>
+                        </div>
+                        <div className='profile-actions' style={{ marginLeft: 'auto' }}>
+                            <button
+                                className='profile-action-button'
+                                onClick={(e) => {
+                                    sendMatchRequest(userId);
+                                    e.stopPropagation;
+                                }}
+                                disabled={connected}
+                            >
+                                {pending ? 'Pending' : connected ? 'Connected' : 'Connect'}
+                            </button>
+                            <button
+                                className='profile-action-button'
+                                onClick={(e) => {
+                                    navigate('/groups');
+                                    e.stopPropagation;
+                                }}
+                                disabled={!connected}
+                            >
+                                Invite to Group
+                            </button>
                         </div>
                     </div>
 
@@ -122,9 +167,9 @@ export default function UserProfilePage() {
                         <h2 className='profile-section-title'>Account</h2>
 
                         <div className='profile-placeholder-text'>
-                            <div>Full name: {user.full_name}</div>
-                            <div>Username: {user.username}</div>
-                            <div>Major: {user.major}</div>
+                            <div>Full name: {user?.full_name}</div>
+                            <div>Username: {user?.username}</div>
+                            <div>Major: {user?.major}</div>
                         </div>
                     </div>
                     <div className='profile-section'>
