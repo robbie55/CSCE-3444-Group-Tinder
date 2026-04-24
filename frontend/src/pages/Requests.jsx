@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { openOrGetConversation } from '../api/messages';
 import {
     acceptMatchRequest,
     getConnections,
@@ -12,6 +14,7 @@ import UserSearchCard from '../components/UserSearchCard';
 import './Requests.css';
 
 export default function Requests() {
+    const navigate = useNavigate();
     const [requests, setRequests] = useState([]);
     const [outgoingRequests, setOutgoingRequests] = useState([]);
     const [connectionsList, setConnectionsList] = useState([]);
@@ -65,6 +68,19 @@ export default function Requests() {
         }
     };
 
+    const handleMessageUser = async (userId) => {
+        if (!userId) return;
+
+        try {
+            const conversation = await openOrGetConversation(userId);
+            const conversationId = conversation?.id ?? conversation?._id;
+            if (!conversationId) return;
+            navigate(`/messages?conversationId=${conversationId}`);
+        } catch (err) {
+            console.error('Error opening conversation:', err);
+        }
+    };
+
     const normalizeUserForCard = (user) => ({
         ...user,
         full_name: user?.full_name || 'Unknown User',
@@ -109,6 +125,7 @@ export default function Requests() {
                                     request={request}
                                     onAccept={handleAccept}
                                     onReject={handleReject}
+                                    onMessage={handleMessageUser}
                                 />
                             ))}
                         </div>
@@ -131,6 +148,12 @@ export default function Requests() {
                                     >
                                         <UserSearchCard user={normalizeUserForCard(user)} />
                                         <span className='outgoing-request-status'>Pending</span>
+                                        <button
+                                            className='requests-message-btn'
+                                            onClick={() => handleMessageUser(getUserId(user))}
+                                        >
+                                            Message
+                                        </button>
                                     </div>
                                 );
                             })}
@@ -145,10 +168,15 @@ export default function Requests() {
                     ) : (
                         <div className='users'>
                             {connectionsList.map((user) => (
-                                <UserSearchCard
-                                    key={getUserId(user)}
-                                    user={normalizeUserForCard(user)}
-                                />
+                                <div key={getUserId(user)} className='connected-user-card'>
+                                    <UserSearchCard user={normalizeUserForCard(user)} />
+                                    <button
+                                        className='requests-message-btn'
+                                        onClick={() => handleMessageUser(getUserId(user))}
+                                    >
+                                        Message
+                                    </button>
+                                </div>
                             ))}
                         </div>
                     )}

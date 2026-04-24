@@ -16,18 +16,6 @@ function getId(value) {
     return value?.id ?? value?._id ?? null;
 }
 
-function sortByCreatedAsc(messages) {
-    return [...messages].sort((a, b) => {
-        const aDate = new Date(a.created_at).getTime();
-        const bDate = new Date(b.created_at).getTime();
-        if (aDate !== bDate) return aDate - bDate;
-
-        const aId = String(getId(a) ?? '');
-        const bId = String(getId(b) ?? '');
-        return aId.localeCompare(bId);
-    });
-}
-
 export default function Messages() {
     const [searchParams] = useSearchParams();
     const [currentUser, setCurrentUser] = useState(null);
@@ -66,10 +54,13 @@ export default function Messages() {
 
         setMessagesByConversation((prev) => {
             const existing = prev[conversationId] ?? [];
-            const deduped = existing.filter((msg) => getId(msg) !== incomingMessageId);
+            const alreadyExists = existing.some((msg) => getId(msg) === incomingMessageId);
+            if (alreadyExists) {
+                return prev;
+            }
             return {
                 ...prev,
-                [conversationId]: sortByCreatedAsc([...deduped, incomingMessage]),
+                [conversationId]: [...existing, incomingMessage],
             };
         });
     };
@@ -78,7 +69,7 @@ export default function Messages() {
         const rows = await getConversationMessages(conversationId, { limit: 50 });
         setMessagesByConversation((prev) => ({
             ...prev,
-            [conversationId]: sortByCreatedAsc(rows),
+            [conversationId]: rows,
         }));
     };
 

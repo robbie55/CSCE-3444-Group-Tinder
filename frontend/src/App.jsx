@@ -4,6 +4,7 @@ import GroupDetailPage from './pages/GroupDetailPage';
 import GroupsPage from './pages/GroupsPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
+import Messages from './pages/Messages';
 import ProfilePage from './pages/ProfilePage';
 import Requests from './pages/Requests';
 import SignupPage from './pages/SignupPage';
@@ -59,6 +60,14 @@ export default function App() {
                 element={
                     <ProtectedRoute>
                         <Requests />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path='/messages'
+                element={
+                    <ProtectedRoute>
+                        <Messages />
                     </ProtectedRoute>
                 }
             />
