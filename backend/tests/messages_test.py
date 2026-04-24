@@ -199,7 +199,9 @@ class TestTryDeleteDmMessage:
         assert result.error is not None
         assert result.error.code == "message_not_found"
 
-    def test_success_deletes_message_and_refreshes_summary(self, mock_db, valid_conv_doc):
+    def test_success_deletes_message_and_refreshes_summary(
+        self, mock_db, valid_conv_doc
+    ):
         conversations, messages = self._wire_message_collections(mock_db)
         conversations.find_one.return_value = valid_conv_doc
         messages.find_one.side_effect = [
@@ -352,8 +354,8 @@ class TestMessagesRouter:
     def test_delete_message_success_returns_204(self, client, mock_db, valid_conv_doc):
         conversations = MagicMock()
         messages = MagicMock()
-        mock_db.__getitem__.side_effect = (
-            lambda name: conversations if name == "conversations" else messages
+        mock_db.__getitem__.side_effect = lambda name: (
+            conversations if name == "conversations" else messages
         )
         conversations.find_one.return_value = valid_conv_doc
         messages.find_one.side_effect = [
@@ -382,8 +384,8 @@ class TestMessagesRouter:
     def test_delete_message_forbidden_returns_403(self, client, mock_db):
         conversations = MagicMock()
         messages = MagicMock()
-        mock_db.__getitem__.side_effect = (
-            lambda name: conversations if name == "conversations" else messages
+        mock_db.__getitem__.side_effect = lambda name: (
+            conversations if name == "conversations" else messages
         )
         conversations.find_one.return_value = {
             "_id": ObjectId(TEST_CONV_ID),

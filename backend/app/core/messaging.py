@@ -340,7 +340,9 @@ def try_delete_dm_message(
     try:
         conv_oid = ObjectId(conversation_id)
     except Exception:
-        return _DmDeleteResult.failure("invalid_conversation_id", "Invalid conversation id.")
+        return _DmDeleteResult.failure(
+            "invalid_conversation_id", "Invalid conversation id."
+        )
 
     try:
         msg_oid = ObjectId(message_id)
@@ -349,7 +351,9 @@ def try_delete_dm_message(
 
     conv = db["conversations"].find_one({"_id": conv_oid})
     if not conv:
-        return _DmDeleteResult.failure("conversation_not_found", "Conversation not found.")
+        return _DmDeleteResult.failure(
+            "conversation_not_found", "Conversation not found."
+        )
 
     if not conversation_has_participant(conv, requester_oid):
         return _DmDeleteResult.failure(
