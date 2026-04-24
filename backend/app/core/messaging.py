@@ -15,6 +15,7 @@ from typing import Any
 from bson import ObjectId
 from pydantic import ValidationError
 from pymongo import ASCENDING, DESCENDING
+from pymongo.errors import DuplicateKeyError, OperationFailure
 from starlette.websockets import WebSocket
 
 from app.models.schemas import MessageCreate
@@ -22,6 +23,9 @@ from app.models.schemas import MessageCreate
 logger = logging.getLogger(__name__)
 
 PREVIEW_MAX_LEN = 200
+CONVERSATION_KEY_FIELD = "conversation_key"
+LEGACY_UNIQUE_PARTICIPANTS_INDEX = "uniq_dm_participants"
+UNIQUE_CONVERSATION_KEY_INDEX = "uniq_dm_conversation_key"
 
 
 class ConnectionManager:
@@ -60,11 +64,49 @@ connection_manager = ConnectionManager()
 
 
 def ensure_messaging_indexes(db) -> None:
-    """Idempotent index setup for conversations and messages."""
-    db["conversations"].create_index(
+    """
+    Idempotent index setup for conversations and messages.
+
+    Migration notes:
+    - Legacy code used a unique multikey index on participant_ids, which can block
+      valid conversations because each participant id must be globally unique.
+    - We migrate to a deterministic scalar key (`conversation_key`) to enforce one
+      DM per user pair while allowing each user to have many conversations.
+    """
+    conversations = db["conversations"]
+
+    # Backfill deterministic keys for existing rows before creating the unique index.
+    for conv in conversations.find(
+        {
+            "participant_ids.0": {"$exists": True},
+            "participant_ids.1": {"$exists": True},
+            CONVERSATION_KEY_FIELD: {"$exists": False},
+        }
+    ):
+        participants = conv.get("participant_ids", [])
+        if len(participants) != 2:
+            continue
+        key = dm_pair_key(participants[0], participants[1])
+        conversations.update_one(
+            {"_id": conv["_id"], CONVERSATION_KEY_FIELD: {"$exists": False}},
+            {"$set": {CONVERSATION_KEY_FIELD: key}},
+        )
+
+    # Drop legacy unique index (safe if already missing).
+    try:
+        conversations.drop_index(LEGACY_UNIQUE_PARTICIPANTS_INDEX)
+    except OperationFailure:
+        pass
+
+    # Keep participant_ids indexed for "list my conversations" lookups (non-unique).
+    conversations.create_index(
         [("participant_ids", ASCENDING)],
+        name="dm_participants_lookup",
+    )
+    conversations.create_index(
+        [(CONVERSATION_KEY_FIELD, ASCENDING)],
         unique=True,
-        name="uniq_dm_participants",
+        name=UNIQUE_CONVERSATION_KEY_INDEX,
     )
     db["messages"].create_index(
         [("conversation_id", ASCENDING), ("created_at", DESCENDING)],
@@ -77,17 +119,25 @@ def canonical_participant_ids(a: ObjectId, b: ObjectId) -> list[ObjectId]:
     return [a, b] if a <= b else [b, a]
 
 
+def dm_pair_key(user_a: ObjectId, user_b: ObjectId) -> str:
+    """Deterministic pair key used for unique DM constraint."""
+    first, second = canonical_participant_ids(user_a, user_b)
+    return f"{first}:{second}"
+
+
 def get_or_create_conversation(db, user_a: ObjectId, user_b: ObjectId) -> dict:
     if user_a == user_b:
         raise ValueError("Cannot open a DM with yourself.")
     participants = canonical_participant_ids(user_a, user_b)
-    existing = db["conversations"].find_one({"participant_ids": participants})
+    key = dm_pair_key(user_a, user_b)
+    existing = db["conversations"].find_one({CONVERSATION_KEY_FIELD: key})
     if existing:
         return existing
 
     now = datetime.now(timezone.utc)
     doc = {
         "participant_ids": participants,
+        CONVERSATION_KEY_FIELD: key,
         "created_at": now,
         "updated_at": now,
         "last_message_at": None,
@@ -97,9 +147,9 @@ def get_or_create_conversation(db, user_a: ObjectId, user_b: ObjectId) -> dict:
         result = db["conversations"].insert_one(doc)
         doc["_id"] = result.inserted_id
         return doc
-    except Exception:
+    except DuplicateKeyError:
         # Race: another request created the same pair; return canonical row.
-        existing = db["conversations"].find_one({"participant_ids": participants})
+        existing = db["conversations"].find_one({CONVERSATION_KEY_FIELD: key})
         if existing:
             return existing
         raise
