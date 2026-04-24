@@ -20,6 +20,7 @@ export default function Requests() {
     const [connectionsList, setConnectionsList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [messageActionError, setMessageActionError] = useState(null);
 
     const getUserId = (user) => user?.id || user?._id;
     const getRequestId = (req) => req?.id ?? req?._id;
@@ -72,12 +73,17 @@ export default function Requests() {
         if (!userId) return;
 
         try {
+            setMessageActionError(null);
             const conversation = await openOrGetConversation(userId);
             const conversationId = conversation?.id ?? conversation?._id;
-            if (!conversationId) return;
+            if (!conversationId) {
+                setMessageActionError('Could not open chat. Please try again.');
+                return;
+            }
             navigate(`/messages?conversationId=${conversationId}`);
         } catch (err) {
             console.error('Error opening conversation:', err);
+            setMessageActionError(err.message || 'Could not open chat. Please try again.');
         }
     };
 
@@ -113,6 +119,11 @@ export default function Requests() {
     } else {
         content = (
             <>
+                {messageActionError && (
+                    <div className='requests-error-banner'>
+                        <p>{messageActionError}</p>
+                    </div>
+                )}
                 <section className='requests-section'>
                     <h2>Pending Requests</h2>
                     {requests.length === 0 ? (
