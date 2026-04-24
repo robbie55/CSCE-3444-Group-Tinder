@@ -64,6 +64,19 @@ export async function sendConversationMessage(conversationId, content) {
     return response.json();
 }
 
+export async function deleteConversationMessage(conversationId, messageId) {
+    const response = await apiFetch(
+        `/api/messages/conversations/${conversationId}/messages/${messageId}`,
+        {
+            method: 'DELETE',
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(await parseApiError(response, 'Failed to delete message'));
+    }
+}
+
 export function createMessagesSocket(token = getToken()) {
     if (!token) return null;
 

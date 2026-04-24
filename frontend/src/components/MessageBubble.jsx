@@ -11,14 +11,27 @@ function formatTime(value) {
     });
 }
 
-export default function MessageBubble({ message, isMine }) {
+export default function MessageBubble({ message, isMine, onDelete, deleting }) {
     const timestamp = formatTime(message.created_at);
+    const messageId = message.id ?? message._id;
 
     return (
         <div className={`message-bubble-row${isMine ? ' message-bubble-row--mine' : ''}`}>
             <div className={`message-bubble${isMine ? ' message-bubble--mine' : ''}`}>
                 <p>{message.content}</p>
-                {timestamp && <span>{timestamp}</span>}
+                <div className='message-bubble-meta'>
+                    {timestamp && <span>{timestamp}</span>}
+                    {isMine && (
+                        <button
+                            type='button'
+                            className='message-bubble-delete'
+                            onClick={() => onDelete?.(messageId)}
+                            disabled={deleting}
+                        >
+                            {deleting ? 'Deleting...' : 'Delete'}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -32,8 +45,12 @@ MessageBubble.propTypes = {
         created_at: PropTypes.string,
     }).isRequired,
     isMine: PropTypes.bool,
+    onDelete: PropTypes.func,
+    deleting: PropTypes.bool,
 };
 
 MessageBubble.defaultProps = {
     isMine: false,
+    onDelete: null,
+    deleting: false,
 };

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
 import { PropTypes } from 'prop-types';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getConnections } from '../api/match';
 import './ConnectionPicker.css';

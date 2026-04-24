@@ -8,12 +8,7 @@ function formatTimestamp(value) {
     return date.toLocaleString();
 }
 
-export default function ConversationListItem({
-    conversation,
-    otherUser,
-    isActive,
-    onSelect,
-}) {
+export default function ConversationListItem({ conversation, otherUser, isActive, onSelect }) {
     const conversationId = conversation.id ?? conversation._id;
     const displayName = otherUser?.full_name || otherUser?.username || 'Unknown User';
     const username = otherUser?.username ? `@${otherUser.username}` : '';

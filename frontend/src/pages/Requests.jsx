@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { openOrGetConversation } from '../api/messages';
 import {
     acceptMatchRequest,
     getConnections,
@@ -8,6 +7,7 @@ import {
     getOutgoingRequests,
     rejectMatchRequest,
 } from '../api/match';
+import { openOrGetConversation } from '../api/messages';
 import RequestCard from '../components/RequestCard';
 import Sidebar from '../components/Sidebar';
 import UserSearchCard from '../components/UserSearchCard';

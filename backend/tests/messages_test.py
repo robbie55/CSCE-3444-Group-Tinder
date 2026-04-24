@@ -13,8 +13,8 @@ from app.core.messaging import (
     conversation_has_participant,
     message_doc_to_api_dict,
     other_participant_id,
-    try_delete_dm_message,
     try_commit_dm,
+    try_delete_dm_message,
 )
 from app.db.connect import get_db
 from app.routers.auth import get_current_user

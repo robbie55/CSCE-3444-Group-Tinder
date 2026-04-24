@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
     createMessagesSocket,
+    deleteConversationMessage,
     getConversationMessages,
     listConversations,
     sendConversationMessage,
@@ -29,6 +30,7 @@ export default function Messages() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [sending, setSending] = useState(false);
+    const [deletingMessageIds, setDeletingMessageIds] = useState(new Set());
     const [socketConnected, setSocketConnected] = useState(false);
     const requestedConversationId = searchParams.get('conversationId');
 
@@ -51,8 +53,14 @@ export default function Messages() {
     const isAtMessageLimit = charactersRemaining <= 0;
 
     const getOtherParticipant = (conversation) => {
-        const participants = Array.isArray(conversation?.participants) ? conversation.participants : [];
-        return participants.find((participant) => getId(participant) !== myUserId) ?? participants[0] ?? null;
+        const participants = Array.isArray(conversation?.participants)
+            ? conversation.participants
+            : [];
+        return (
+            participants.find((participant) => getId(participant) !== myUserId) ??
+            participants[0] ??
+            null
+        );
     };
 
     const upsertMessage = (conversationId, incomingMessage) => {
@@ -71,15 +79,15 @@ export default function Messages() {
         });
     };
 
-    const fetchMessagesForConversation = async (conversationId) => {
+    const fetchMessagesForConversation = useCallback(async (conversationId) => {
         const rows = await getConversationMessages(conversationId, { limit: 50 });
         setMessagesByConversation((prev) => ({
             ...prev,
             [conversationId]: rows,
         }));
-    };
+    }, []);
 
-    const fetchInitialData = async () => {
+    const fetchInitialData = useCallback(async () => {
         try {
             setLoading(true);
             const [me, inbox] = await Promise.all([getCurrentUser(), listConversations()]);
@@ -105,11 +113,11 @@ export default function Messages() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [fetchMessagesForConversation, requestedConversationId]);
 
     useEffect(() => {
         fetchInitialData();
-    }, [requestedConversationId]);
+    }, [fetchInitialData]);
 
     useEffect(() => {
         if (!selectedConversationId) return;
@@ -119,7 +127,7 @@ export default function Messages() {
             console.error('Error loading conversation messages:', err);
             setError('Failed to load conversation messages.');
         });
-    }, [selectedConversationId, messagesByConversation]);
+    }, [fetchMessagesForConversation, selectedConversationId, messagesByConversation]);
 
     useEffect(() => {
         const socket = createMessagesSocket();
@@ -227,6 +235,54 @@ export default function Messages() {
         setMessageInput(nextValue);
     };
 
+    const handleDeleteMessage = async (messageId) => {
+        if (!selectedConversationId || !messageId) return;
+
+        setDeletingMessageIds((prev) => {
+            const next = new Set(prev);
+            next.add(messageId);
+            return next;
+        });
+
+        try {
+            await deleteConversationMessage(selectedConversationId, messageId);
+
+            let nextConversationLastMessage = null;
+            setMessagesByConversation((prev) => {
+                const existing = prev[selectedConversationId] ?? [];
+                const updated = existing.filter((message) => getId(message) !== messageId);
+                nextConversationLastMessage =
+                    updated.length > 0 ? updated[updated.length - 1] : null;
+
+                return {
+                    ...prev,
+                    [selectedConversationId]: updated,
+                };
+            });
+
+            setConversations((prev) =>
+                prev.map((conversation) => {
+                    if (getId(conversation) !== selectedConversationId) return conversation;
+                    return {
+                        ...conversation,
+                        last_message_at: nextConversationLastMessage?.created_at ?? null,
+                        last_message_preview: nextConversationLastMessage?.content ?? null,
+                    };
+                })
+            );
+            setError(null);
+        } catch (err) {
+            console.error('Error deleting message:', err);
+            setError(err.message || 'Failed to delete message.');
+        } finally {
+            setDeletingMessageIds((prev) => {
+                const next = new Set(prev);
+                next.delete(messageId);
+                return next;
+            });
+        }
+    };
+
     if (loading) {
         return (
             <div className='page'>
@@ -293,7 +349,8 @@ export default function Messages() {
                                     <div className='messages-chat-header'>
                                         <h3>
                                             {getOtherParticipant(selectedConversation)?.full_name ||
-                                                getOtherParticipant(selectedConversation)?.username ||
+                                                getOtherParticipant(selectedConversation)
+                                                    ?.username ||
                                                 'Conversation'}
                                         </h3>
                                     </div>
@@ -309,6 +366,10 @@ export default function Messages() {
                                                     key={getId(message)}
                                                     message={message}
                                                     isMine={message.sender_id === myUserId}
+                                                    onDelete={handleDeleteMessage}
+                                                    deleting={deletingMessageIds.has(
+                                                        getId(message)
+                                                    )}
                                                 />
                                             ))
                                         )}
@@ -327,7 +388,9 @@ export default function Messages() {
                                         <button
                                             type='submit'
                                             disabled={
-                                                sending || !messageInput.trim() || messageInput.length > MAX_MESSAGE_LENGTH
+                                                sending ||
+                                                !messageInput.trim() ||
+                                                messageInput.length > MAX_MESSAGE_LENGTH
                                             }
                                         >
                                             {sending ? 'Sending...' : 'Send'}
@@ -343,7 +406,9 @@ export default function Messages() {
                                 </>
                             ) : (
                                 <div className='messages-chat-empty'>
-                                    <p className='empty-message'>Select a conversation to start messaging.</p>
+                                    <p className='empty-message'>
+                                        Select a conversation to start messaging.
+                                    </p>
                                 </div>
                             )}
                         </section>
