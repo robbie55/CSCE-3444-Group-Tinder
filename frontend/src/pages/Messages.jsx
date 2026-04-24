@@ -12,6 +12,9 @@ import MessageBubble from '../components/MessageBubble';
 import Sidebar from '../components/Sidebar';
 import './Messages.css';
 
+const MAX_MESSAGE_LENGTH = 500;
+const MESSAGE_WARNING_THRESHOLD = 50;
+
 function getId(value) {
     return value?.id ?? value?._id ?? null;
 }
@@ -43,6 +46,9 @@ export default function Messages() {
         if (!selectedConversationId) return [];
         return messagesByConversation[selectedConversationId] ?? [];
     }, [messagesByConversation, selectedConversationId]);
+    const charactersRemaining = MAX_MESSAGE_LENGTH - messageInput.length;
+    const isNearMessageLimit = charactersRemaining <= MESSAGE_WARNING_THRESHOLD;
+    const isAtMessageLimit = charactersRemaining <= 0;
 
     const getOtherParticipant = (conversation) => {
         const participants = Array.isArray(conversation?.participants) ? conversation.participants : [];
@@ -213,6 +219,14 @@ export default function Messages() {
         }
     };
 
+    const handleMessageInputChange = (event) => {
+        const nextValue = event.target.value;
+        if (nextValue.length > MAX_MESSAGE_LENGTH) {
+            return;
+        }
+        setMessageInput(nextValue);
+    };
+
     if (loading) {
         return (
             <div className='page'>
@@ -305,15 +319,27 @@ export default function Messages() {
                                         <input
                                             type='text'
                                             value={messageInput}
-                                            onChange={(event) => setMessageInput(event.target.value)}
+                                            onChange={handleMessageInputChange}
                                             placeholder='Write a message...'
-                                            maxLength={8000}
+                                            maxLength={MAX_MESSAGE_LENGTH}
                                             disabled={sending}
                                         />
-                                        <button type='submit' disabled={sending || !messageInput.trim()}>
+                                        <button
+                                            type='submit'
+                                            disabled={
+                                                sending || !messageInput.trim() || messageInput.length > MAX_MESSAGE_LENGTH
+                                            }
+                                        >
                                             {sending ? 'Sending...' : 'Send'}
                                         </button>
                                     </form>
+                                    <p
+                                        className={`messages-character-count${isNearMessageLimit ? ' messages-character-count--warning' : ''}${isAtMessageLimit ? ' messages-character-count--error' : ''}`}
+                                    >
+                                        {isAtMessageLimit
+                                            ? `Message limit reached (${MAX_MESSAGE_LENGTH} characters max). Delete characters to continue.`
+                                            : `${charactersRemaining} characters remaining`}
+                                    </p>
                                 </>
                             ) : (
                                 <div className='messages-chat-empty'>

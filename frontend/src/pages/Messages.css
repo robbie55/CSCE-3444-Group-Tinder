@@ -150,6 +150,21 @@
     cursor: not-allowed;
 }
 
+.messages-character-count {
+    margin: var(--space-2) 0 0 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.messages-character-count--warning {
+    color: #b45309;
+}
+
+.messages-character-count--error {
+    color: var(--color-error);
+    font-weight: 600;
+}
+
 .messages-chat-empty,
 .page-empty {
     display: flex;
