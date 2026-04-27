@@ -107,6 +107,7 @@ def ensure_messaging_indexes(db) -> None:
         [(CONVERSATION_KEY_FIELD, ASCENDING)],
         unique=True,
         name=UNIQUE_CONVERSATION_KEY_INDEX,
+        partialFilterExpression={CONVERSATION_KEY_FIELD: {"$exists": True}},
     )
     db["messages"].create_index(
         [("conversation_id", ASCENDING), ("created_at", DESCENDING)],
