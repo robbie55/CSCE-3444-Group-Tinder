@@ -364,6 +364,11 @@ def try_delete_dm_message(
     if not msg:
         return _DmDeleteResult.failure("message_not_found", "Message not found.")
 
+    if msg["sender_id"] != requester_oid:
+        return _DmDeleteResult.failure(
+            "forbidden", "You can only delete your own messages."
+        )
+
     try:
         db["messages"].delete_one({"_id": msg_oid, "conversation_id": conv_oid})
         _refresh_conversation_summary_after_delete(db, conv_oid)

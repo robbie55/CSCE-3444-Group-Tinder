@@ -229,6 +229,28 @@ class TestTryDeleteDmMessage:
         messages.delete_one.assert_called_once()
         conversations.update_one.assert_called_once()
 
+    def test_delete_fails_when_requester_is_not_message_sender(
+        self, mock_db, valid_conv_doc
+    ):
+        conversations, messages = self._wire_message_collections(mock_db)
+        conversations.find_one.return_value = valid_conv_doc
+        messages.find_one.return_value = {
+            "_id": ObjectId(TEST_MSG_ID),
+            "conversation_id": ObjectId(TEST_CONV_ID),
+            "sender_id": ObjectId(OTHER_USER_ID),
+            "content": "not yours",
+            "created_at": datetime.now(timezone.utc),
+        }
+
+        result = try_delete_dm_message(
+            mock_db, ObjectId(TEST_USER_ID), TEST_CONV_ID, TEST_MSG_ID
+        )
+
+        assert result.ok is False
+        assert result.error is not None
+        assert result.error.code == "forbidden"
+        messages.delete_one.assert_not_called()
+
 
 class TestConnectionManager:
     def test_second_register_closes_previous_socket(self):
