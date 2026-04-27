@@ -9,6 +9,10 @@ import './UserSearchPage.css';
 // basic search page
 // display either user cards or no user message
 export default function UserSearchPage() {
+    const [_search, _setSearch] = useState('');
+    const [_major, _setMajor] = useState('all');
+    const [_skills, _setSkills] = useState('all');
+
     const [_loading, _setLoading] = useState(true);
     const [_error, _setError] = useState('');
 
@@ -56,10 +60,6 @@ export default function UserSearchPage() {
         fetchCurrentUserId();
         fetchUsers();
     }, [fetchCurrentUserId, fetchUsers]);
-
-    const [_search, _setSearch] = useState('');
-    const [_major, _setMajor] = useState('all');
-    const [_skills, _setSkills] = useState('all');
 
     const filterUsers = useCallback(
         (usersArray) => {

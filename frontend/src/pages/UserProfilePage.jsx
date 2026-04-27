@@ -50,9 +50,9 @@ export default function UserProfilePage() {
 
         try {
             const connectionsData = await getConnections();
-            setConnected(userId in connectionsData);
+            setConnected(connectionsData.some((u) => u._id === userId));
             const outgoingData = await getOutgoingRequests();
-            setPending(userId in outgoingData);
+            setPending(outgoingData.some((req) => req.receiver_id === userId));
         } catch (err) {
             console.error('Error fetching requests:', err);
             setError(err.message || 'Failed to load connections.');
@@ -82,7 +82,7 @@ export default function UserProfilePage() {
     const linkedinUrl = user?.external_links?.linkedin ?? '';
     const hasExternalLinks = Boolean(githubUrl || linkedinUrl);
     // Loading mode
-    /*
+
     if (loading) {
         return (
             <div className='page'>
@@ -121,7 +121,7 @@ export default function UserProfilePage() {
             </div>
         );
     }
-    */
+
     // Success mode: view vs edit UI
     return (
         <div className='page'>
@@ -142,11 +142,12 @@ export default function UserProfilePage() {
                         <div className='profile-actions' style={{ marginLeft: 'auto' }}>
                             <button
                                 className='profile-action-button'
-                                onClick={(e) => {
+                                onClick={async (e) => {
                                     sendMatchRequest(userId);
-                                    e.stopPropagation;
+                                    e.stopPropagation();
+                                    setPending(true);
                                 }}
-                                disabled={connected}
+                                disabled={connected || pending}
                             >
                                 {pending ? 'Pending' : connected ? 'Connected' : 'Connect'}
                             </button>
@@ -154,7 +155,7 @@ export default function UserProfilePage() {
                                 className='profile-action-button'
                                 onClick={(e) => {
                                     navigate('/groups');
-                                    e.stopPropagation;
+                                    e.stopPropagation();
                                 }}
                                 disabled={!connected}
                             >
