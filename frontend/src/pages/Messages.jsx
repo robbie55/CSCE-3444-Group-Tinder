@@ -247,18 +247,17 @@ export default function Messages() {
         try {
             await deleteConversationMessage(selectedConversationId, messageId);
 
-            let nextConversationLastMessage = null;
-            setMessagesByConversation((prev) => {
-                const existing = prev[selectedConversationId] ?? [];
-                const updated = existing.filter((message) => getId(message) !== messageId);
-                nextConversationLastMessage =
-                    updated.length > 0 ? updated[updated.length - 1] : null;
+            const existingMessages = messagesByConversation[selectedConversationId] ?? [];
+            const updatedMessages = existingMessages.filter(
+                (message) => getId(message) !== messageId
+            );
+            const nextConversationLastMessage =
+                updatedMessages.length > 0 ? updatedMessages[updatedMessages.length - 1] : null;
 
-                return {
-                    ...prev,
-                    [selectedConversationId]: updated,
-                };
-            });
+            setMessagesByConversation((prev) => ({
+                ...prev,
+                [selectedConversationId]: updatedMessages,
+            }));
 
             setConversations((prev) =>
                 prev.map((conversation) => {
@@ -270,6 +269,7 @@ export default function Messages() {
                     };
                 })
             );
+
             setError(null);
         } catch (err) {
             console.error('Error deleting message:', err);
