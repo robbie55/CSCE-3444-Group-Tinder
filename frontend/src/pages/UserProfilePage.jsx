@@ -122,7 +122,7 @@ export default function UserProfilePage() {
         );
     }
 
-    // Success mode: view vs edit UI
+    // Success mode
     return (
         <div className='page'>
             <div className='page-sidebar'>
@@ -150,16 +150,6 @@ export default function UserProfilePage() {
                                 disabled={connected || pending}
                             >
                                 {pending ? 'Pending' : connected ? 'Connected' : 'Connect'}
-                            </button>
-                            <button
-                                className='profile-action-button'
-                                onClick={(e) => {
-                                    navigate('/groups');
-                                    e.stopPropagation();
-                                }}
-                                disabled={!connected}
-                            >
-                                Invite to Group
                             </button>
                         </div>
                     </div>

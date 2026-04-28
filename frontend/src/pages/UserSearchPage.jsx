@@ -63,28 +63,18 @@ export default function UserSearchPage() {
 
     const filterUsers = useCallback(
         (usersArray) => {
-            try {
-                _setLoading(true);
-                _setError('');
+            return (usersArray ?? []).filter((user) => {
+                if (_currentUserId && _currentUserId === user._id) return false;
 
-                return (usersArray ?? []).filter((user) => {
-                    if (_currentUserId && _currentUserId === user._id) return false;
+                const matchesSearch = user.full_name
+                    .trim()
+                    .toLowerCase()
+                    .includes(_search.trim().toLowerCase());
+                const matchesMajor = _major === 'all' || user.major === _major;
+                const matchesSkill = _skills === 'all' || user.skills.includes(_skills);
 
-                    const matchesSearch = user.full_name
-                        .trim()
-                        .toLowerCase()
-                        .includes(_search.trim().toLowerCase());
-                    const matchesMajor = _major === 'all' || user.major === _major;
-                    const matchesSkill = _skills === 'all' || user.skills.includes(_skills);
-
-                    return matchesSearch && matchesMajor && matchesSkill;
-                });
-            } catch (err) {
-                _setError(err.message || 'Failed to filter users.');
-                console.error(err.message || 'Failed to filter users.');
-            } finally {
-                _setLoading(false);
-            }
+                return matchesSearch && matchesMajor && matchesSkill;
+            });
         },
         [_search, _major, _skills, _currentUserId]
     );

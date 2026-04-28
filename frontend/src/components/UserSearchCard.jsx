@@ -97,7 +97,6 @@ export default function UserSearchCard({ user }) {
 
 // verification to ensure these variables exist
 UserSearchCard.propTypes = {
-    popupHandler: PropTypes.func.isRequired,
     user: PropTypes.shape({
         _id: PropTypes.string.isRequired,
         full_name: PropTypes.string.isRequired,
