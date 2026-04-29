@@ -18,9 +18,7 @@ export default function UserProfilePage() {
     const [pending, setPending] = useState(false);
 
     const loadProfile = useCallback(async () => {
-        setLoading(true);
         setError('');
-
         try {
             const currentUser = await getCurrentUser();
             if (userId == currentUser._id) {
@@ -39,15 +37,11 @@ export default function UserProfilePage() {
         } catch (err) {
             setError(err.message || 'Failed to load user profile.');
             setUser(null);
-        } finally {
-            setLoading(false);
         }
     }, [userId, navigate]);
 
     const checkConnections = useCallback(async () => {
-        setLoading(true);
         setError('');
-
         try {
             const connectionsData = await getConnections();
             setConnected(connectionsData.some((u) => u._id === userId));
@@ -56,15 +50,24 @@ export default function UserProfilePage() {
         } catch (err) {
             console.error('Error fetching requests:', err);
             setError(err.message || 'Failed to load connections.');
-        } finally {
-            setLoading(false);
         }
     }, [userId]);
 
-    useEffect(() => {
-        loadProfile();
-        checkConnections();
+    const loadPage = useCallback(async () => {
+        setLoading(true);
+        setError('');
+        try {
+            await Promise.all([loadProfile(), checkConnections()]);
+        } catch (err) {
+            setError(err.message || 'Failed to load profile page.');
+        } finally {
+            setLoading(false);
+        }
     }, [loadProfile, checkConnections]);
+
+    useEffect(() => {
+        loadPage();
+    }, [loadPage]);
 
     const initials = useMemo(() => {
         const name = user?.full_name;
@@ -142,10 +145,14 @@ export default function UserProfilePage() {
                         <div className='profile-actions' style={{ marginLeft: 'auto' }}>
                             <button
                                 className='profile-action-button'
-                                onClick={async (e) => {
-                                    sendMatchRequest(userId);
-                                    e.stopPropagation();
-                                    setPending(true);
+                                onClick={async () => {
+                                    try {
+                                        setError('');
+                                        sendMatchRequest(userId);
+                                        setPending(true);
+                                    } catch (err) {
+                                        setError(err.message || 'Failed to send request.');
+                                    }
                                 }}
                                 disabled={connected || pending}
                             >
@@ -203,6 +210,9 @@ export default function UserProfilePage() {
                                                 href={githubUrl}
                                                 target='_blank'
                                                 rel='noreferrer'
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                }}
                                             >
                                                 Connected
                                             </a>
@@ -220,6 +230,9 @@ export default function UserProfilePage() {
                                                 href={linkedinUrl}
                                                 target='_blank'
                                                 rel='noreferrer'
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                }}
                                             >
                                                 Connected
                                             </a>
