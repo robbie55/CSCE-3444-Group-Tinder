@@ -210,9 +210,6 @@ export default function UserProfilePage() {
                                                 href={githubUrl}
                                                 target='_blank'
                                                 rel='noreferrer'
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                }}
                                             >
                                                 Connected
                                             </a>
@@ -230,9 +227,6 @@ export default function UserProfilePage() {
                                                 href={linkedinUrl}
                                                 target='_blank'
                                                 rel='noreferrer'
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                }}
                                             >
                                                 Connected
                                             </a>

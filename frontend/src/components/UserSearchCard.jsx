@@ -69,6 +69,9 @@ export default function UserSearchCard({ user }) {
                                     className='card-link'
                                     target='_blank'
                                     rel='noreferrer'
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
                                 >
                                     GitHub
                                 </a>
@@ -79,6 +82,9 @@ export default function UserSearchCard({ user }) {
                                     className='card-link'
                                     target='_blank'
                                     rel='noreferrer'
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
                                 >
                                     LinkedIn
                                 </a>
