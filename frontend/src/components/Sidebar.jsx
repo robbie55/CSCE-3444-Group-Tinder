@@ -30,6 +30,9 @@ export default function Sidebar() {
                 <Link className={linkClass('/requests')} to='/requests'>
                     Requests
                 </Link>
+                <Link className={linkClass('/messages')} to='/messages'>
+                    Messages
+                </Link>
             </div>
             <div className='sidebar-logout'>
                 <button

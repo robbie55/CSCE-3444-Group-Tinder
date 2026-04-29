@@ -23,6 +23,7 @@ from app.core.messaging import (
     message_doc_to_api_dict,
     other_participant_id,
     try_commit_dm,
+    try_delete_dm_message,
 )
 from app.db.connect import get_db
 from app.models.schemas import (
@@ -88,6 +89,25 @@ def _raise_http_for_failed_dm(result) -> None:
         "conversation_not_found": status.HTTP_404_NOT_FOUND,
         "forbidden": status.HTTP_403_FORBIDDEN,
         "validation_error": status.HTTP_422_UNPROCESSABLE_CONTENT,
+        "internal_error": status.HTTP_500_INTERNAL_SERVER_ERROR,
+    }
+    st = status_map.get(code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+    raise HTTPException(status_code=st, detail=msg)
+
+
+def _raise_http_for_failed_delete_dm(result) -> None:
+    """Map try_delete_dm_message failure to HTTPException."""
+    if result.ok:
+        return
+    assert result.error is not None
+    code = result.error.code
+    msg = result.error.message
+    status_map = {
+        "invalid_conversation_id": status.HTTP_400_BAD_REQUEST,
+        "invalid_message_id": status.HTTP_400_BAD_REQUEST,
+        "conversation_not_found": status.HTTP_404_NOT_FOUND,
+        "message_not_found": status.HTTP_404_NOT_FOUND,
+        "forbidden": status.HTTP_403_FORBIDDEN,
         "internal_error": status.HTTP_500_INTERNAL_SERVER_ERROR,
     }
     st = status_map.get(code, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -210,6 +230,22 @@ async def send_conversation_message(
             frame = _ws_message_created_envelope(api_dict)
             await connection_manager.send_envelope(str(peer), frame)
     return msg_read
+
+
+@router.delete(
+    "/conversations/{conversation_id}/messages/{message_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_conversation_message(
+    conversation_id: str,
+    message_id: str,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    requester_oid = ObjectId(current_user["_id"])
+    result = try_delete_dm_message(db, requester_oid, conversation_id, message_id)
+    _raise_http_for_failed_delete_dm(result)
+    return None
 
 
 @router.websocket("/ws")
