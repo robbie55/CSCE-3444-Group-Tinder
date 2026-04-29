@@ -14,6 +14,7 @@ from app.core.messaging import (
     message_doc_to_api_dict,
     other_participant_id,
     try_commit_dm,
+    try_delete_dm_message,
 )
 from app.db.connect import get_db
 from app.routers.auth import get_current_user
@@ -145,6 +146,112 @@ class TestTryCommitDm:
         mock_db["conversations"].update_one.assert_called_once()
 
 
+class TestTryDeleteDmMessage:
+    @staticmethod
+    def _wire_message_collections(mock_db):
+        conversations = MagicMock()
+        messages = MagicMock()
+
+        def _get_collection(name):
+            if name == "conversations":
+                return conversations
+            if name == "messages":
+                return messages
+            return MagicMock()
+
+        mock_db.__getitem__.side_effect = _get_collection
+        return conversations, messages
+
+    def test_invalid_conversation_id_returns_failure(self, mock_db):
+        result = try_delete_dm_message(
+            mock_db, ObjectId(TEST_USER_ID), "bad-id", TEST_MSG_ID
+        )
+        assert result.ok is False
+        assert result.error is not None
+        assert result.error.code == "invalid_conversation_id"
+
+    def test_invalid_message_id_returns_failure(self, mock_db):
+        result = try_delete_dm_message(
+            mock_db, ObjectId(TEST_USER_ID), TEST_CONV_ID, "bad-id"
+        )
+        assert result.ok is False
+        assert result.error is not None
+        assert result.error.code == "invalid_message_id"
+
+    def test_conversation_not_found_returns_failure(self, mock_db):
+        conversations, _messages = self._wire_message_collections(mock_db)
+        conversations.find_one.return_value = None
+        result = try_delete_dm_message(
+            mock_db, ObjectId(TEST_USER_ID), TEST_CONV_ID, TEST_MSG_ID
+        )
+        assert result.ok is False
+        assert result.error is not None
+        assert result.error.code == "conversation_not_found"
+
+    def test_message_not_found_returns_failure(self, mock_db, valid_conv_doc):
+        conversations, messages = self._wire_message_collections(mock_db)
+        conversations.find_one.return_value = valid_conv_doc
+        messages.find_one.side_effect = [None]
+        result = try_delete_dm_message(
+            mock_db, ObjectId(TEST_USER_ID), TEST_CONV_ID, TEST_MSG_ID
+        )
+        assert result.ok is False
+        assert result.error is not None
+        assert result.error.code == "message_not_found"
+
+    def test_success_deletes_message_and_refreshes_summary(
+        self, mock_db, valid_conv_doc
+    ):
+        conversations, messages = self._wire_message_collections(mock_db)
+        conversations.find_one.return_value = valid_conv_doc
+        messages.find_one.side_effect = [
+            {
+                "_id": ObjectId(TEST_MSG_ID),
+                "conversation_id": ObjectId(TEST_CONV_ID),
+                "sender_id": ObjectId(TEST_USER_ID),
+                "content": "to delete",
+                "created_at": datetime.now(timezone.utc),
+            },
+            {
+                "_id": ObjectId(),
+                "conversation_id": ObjectId(TEST_CONV_ID),
+                "sender_id": ObjectId(OTHER_USER_ID),
+                "content": "remaining latest",
+                "created_at": datetime.now(timezone.utc),
+            },
+        ]
+
+        result = try_delete_dm_message(
+            mock_db, ObjectId(TEST_USER_ID), TEST_CONV_ID, TEST_MSG_ID
+        )
+
+        assert result.ok is True
+        messages.delete_one.assert_called_once()
+        conversations.update_one.assert_called_once()
+
+    def test_delete_fails_when_requester_is_not_message_sender(
+        self, mock_db, valid_conv_doc
+    ):
+        conversations, messages = self._wire_message_collections(mock_db)
+        conversations.find_one.return_value = valid_conv_doc
+        messages.find_one.return_value = {
+            "_id": ObjectId(TEST_MSG_ID),
+            "conversation_id": ObjectId(TEST_CONV_ID),
+            "sender_id": ObjectId(OTHER_USER_ID),
+            "content": "not yours",
+            "created_at": datetime.now(timezone.utc),
+        }
+
+        result = try_delete_dm_message(
+            mock_db, ObjectId(TEST_USER_ID), TEST_CONV_ID, TEST_MSG_ID
+        )
+
+        assert result.ok is False
+        assert result.error is not None
+        assert result.error.code == "forbidden"
+        messages.delete_one.assert_not_called()
+
+
 class TestConnectionManager:
     def test_second_register_closes_previous_socket(self):
         async def _run() -> None:
@@ -265,3 +372,50 @@ class TestMessagesRouter:
         assert body["_id"] == TEST_MSG_ID
         assert body["conversation_id"] == TEST_CONV_ID
         assert body["content"] == "hello"
+
+    def test_delete_message_success_returns_204(self, client, mock_db, valid_conv_doc):
+        conversations = MagicMock()
+        messages = MagicMock()
+        mock_db.__getitem__.side_effect = lambda name: (
+            conversations if name == "conversations" else messages
+        )
+        conversations.find_one.return_value = valid_conv_doc
+        messages.find_one.side_effect = [
+            {
+                "_id": ObjectId(TEST_MSG_ID),
+                "conversation_id": ObjectId(TEST_CONV_ID),
+                "sender_id": ObjectId(TEST_USER_ID),
+                "content": "delete me",
+                "created_at": datetime.now(timezone.utc),
+            },
+            {
+                "_id": ObjectId(),
+                "conversation_id": ObjectId(TEST_CONV_ID),
+                "sender_id": ObjectId(TEST_USER_ID),
+                "content": "new latest",
+                "created_at": datetime.now(timezone.utc),
+            },
+        ]
+
+        resp = client.delete(
+            f"/api/messages/conversations/{TEST_CONV_ID}/messages/{TEST_MSG_ID}"
+        )
+
+        assert resp.status_code == 204
+
+    def test_delete_message_forbidden_returns_403(self, client, mock_db):
+        conversations = MagicMock()
+        messages = MagicMock()
+        mock_db.__getitem__.side_effect = lambda name: (
+            conversations if name == "conversations" else messages
+        )
+        conversations.find_one.return_value = {
+            "_id": ObjectId(TEST_CONV_ID),
+            "participant_ids": [ObjectId(OTHER_USER_ID), ObjectId(THIRD_USER_ID)],
+        }
+
+        resp = client.delete(
+            f"/api/messages/conversations/{TEST_CONV_ID}/messages/{TEST_MSG_ID}"
+        )
+
+        assert resp.status_code == 403

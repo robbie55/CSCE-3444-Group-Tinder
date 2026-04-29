@@ -8,6 +8,20 @@
     margin: 0 0 var(--space-6) 0;
 }
 
+.requests-error-banner {
+    border: 1px solid var(--color-error-border);
+    background: var(--color-error-bg);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.requests-error-banner p {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-error);
+}
+
 .outgoing-request-card {
     display: flex;
     flex-direction: column;
@@ -39,6 +53,45 @@
     padding: var(--space-2) var(--space-4);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+}
+
+.connected-user-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow:
+        0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.connected-user-card .profile-card {
+    background: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+.connected-user-card .profile-card:hover {
+    box-shadow: none;
+}
+
+.requests-message-btn {
+    border: 1px solid var(--color-primary);
+    background: var(--color-surface);
+    color: var(--color-primary);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.requests-message-btn:hover {
+    background: #f0fdf4;
 }
 
 .requests-retry {
