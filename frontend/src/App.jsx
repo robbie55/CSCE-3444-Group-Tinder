@@ -1,13 +1,14 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import Dashboard from './pages/Dashboard';
 import GroupDetailPage from './pages/GroupDetailPage';
 import GroupsPage from './pages/GroupsPage';
 import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard';
 import Messages from './pages/Messages';
 import ProfilePage from './pages/ProfilePage';
 import Requests from './pages/Requests';
 import SignupPage from './pages/SignupPage';
+import UserProfilePage from './pages/UserProfilePage';
 import UserSearchPage from './pages/UserSearchPage';
 
 export default function App() {
@@ -68,6 +69,14 @@ export default function App() {
                 element={
                     <ProtectedRoute>
                         <Messages />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path='/users/:userId'
+                element={
+                    <ProtectedRoute>
+                        <UserProfilePage />
                     </ProtectedRoute>
                 }
             />

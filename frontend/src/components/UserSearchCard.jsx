@@ -1,7 +1,10 @@
 import { PropTypes } from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import './UserSearchCard.css';
 
 export default function UserSearchCard({ user }) {
+    const navigate = useNavigate();
+
     const initials =
         (user?.full_name ?? '')
             .split(' ')
@@ -11,7 +14,12 @@ export default function UserSearchCard({ user }) {
             .toUpperCase() || 'U';
 
     return (
-        <div className='profile-card'>
+        <div
+            className='profile-card'
+            onClick={() => {
+                navigate(`/users/${user._id}`);
+            }}
+        >
             <div className='card-header'>
                 <div className='card-avatar'>
                     {user.avatar_url ? (
@@ -61,6 +69,9 @@ export default function UserSearchCard({ user }) {
                                     className='card-link'
                                     target='_blank'
                                     rel='noreferrer'
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
                                 >
                                     GitHub
                                 </a>
@@ -71,13 +82,16 @@ export default function UserSearchCard({ user }) {
                                     className='card-link'
                                     target='_blank'
                                     rel='noreferrer'
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                    }}
                                 >
                                     LinkedIn
                                 </a>
                             )}
                         </div>
                     ) : (
-                        <div className='detail-row'>
+                        <div className='links-row'>
                             <span className='no-card-link'>No external links</span>
                         </div>
                     )}
@@ -90,6 +104,7 @@ export default function UserSearchCard({ user }) {
 // verification to ensure these variables exist
 UserSearchCard.propTypes = {
     user: PropTypes.shape({
+        _id: PropTypes.string.isRequired,
         full_name: PropTypes.string.isRequired,
         username: PropTypes.string.isRequired,
         bio: PropTypes.string,
